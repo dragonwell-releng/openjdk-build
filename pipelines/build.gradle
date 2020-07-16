@@ -34,6 +34,7 @@ shadowJar {
 
 dependencies {
     compile 'org.codehaus.groovy:groovy-all:3.0.4'
+    compile 'com.cloudbees:groovy-cps:1.22'
     testCompile('org.junit.jupiter:junit-jupiter-api:5.4.1')
     testRuntime('org.junit.jupiter:junit-jupiter-engine:5.4.1')
 }

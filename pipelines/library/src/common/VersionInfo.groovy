@@ -106,13 +106,17 @@ class VersionInfo {
         for (String regex : version223Regexs) {
             final matched223 = versionString =~ /^${regex}.*/
             if (matched223.matches()) {
-                major = or0(matched223, 'major')
-                minor = or0(matched223, 'minor')
-                security = or0(matched223, 'security')
-                if (matched223.group('pre') != null) pre = matched223.group('pre')
-                build = or0(matched223, 'build')
-                if (matched223.group('opt') != null) opt = matched223.group('opt')
-                version = matched223.group('version')
+                try {
+                    major = or0(matched223, 'major')
+                    minor = or0(matched223, 'minor')
+                    security = or0(matched223, 'security')
+                    if (matched223.group('pre') != null) pre = matched223.group('pre')
+                    build = or0(matched223, 'build')
+                    if (matched223.group('opt') != null) opt = matched223.group('opt')
+                    version = matched223.group('version')
+                } catch (IllegalArgumentException e) {
+                    return false
+                }
                 return true
             }
         }

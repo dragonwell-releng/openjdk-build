@@ -160,7 +160,7 @@ return {
         }
 
         if (testConfigurations != null) {
-            testConfig = new JsonSlurper().parseText(testConfigurations) as Map
+            testConfig = new JsonSlurper().parseText(testConfigurations) as HashMap
         }
 
         if (versions != null) {

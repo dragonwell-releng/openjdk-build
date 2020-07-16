@@ -25,7 +25,7 @@ class Config11 {
                 arch                : 'x64',
                 dockerImage         : 'adoptopenjdk/centos6_build_image',
                 dockerFile: [
-                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
+                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile',
                 ],
                 test                : [
                         nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
@@ -35,7 +35,8 @@ class Config11 {
                         "openj9"      : '--enable-jitserver --enable-dtrace=auto',
                         "hotspot"     : '--enable-dtrace=auto',
                         "corretto"    : '--enable-dtrace=auto',
-                        "SapMachine"  : '--enable-dtrace=auto'
+                        "SapMachine"  : '--enable-dtrace=auto',
+                        "dragonwell"  : '--disable-ccache --enable-dtrace=auto --with-milestone=fcs --with-cacerts-file=/root/buildfiles/cacerts --with-freetype=system --enable-unlimited-crypto  --with-jvm-variants=server --with-zlib=system --with-jvm-features=zgc'
                 ]
         ],
 

@@ -150,6 +150,9 @@ getOpenJdkVersion() {
     fi
   else
     version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+      version=$(echo $version | cut -d'_' -f 2)
+    fi
 
     # TODO remove pending #1016
     version=${version%_adopt}
@@ -244,10 +247,17 @@ configuringVersionStringParameter()
 
     addConfigureArg "--without-version-pre" ""
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
-    addConfigureArg "--with-vendor-version-string=" "AdoptOpenJDK"
-    addConfigureArg "--with-vendor-url=" "https://adoptopenjdk.net/"
-    addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
-    addConfigureArg "--with-vendor-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-support/issues"
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
+        addConfigureArg "--with-vendor-name=" "Alibaba"
+        addConfigureArg "--with-vendor-url=" "http://www.alibabagroup.com"
+        addConfigureArg "--with-vendor-bug-url=" "mailto:dragonwell_use@googlegroups.com"
+        addConfigureArg "--with-vendor-version-string=" "\"(Alibaba Dragonwell)\""
+    else
+        addConfigureArg "--with-vendor-version-string=" "AdoptOpenJDK"
+        addConfigureArg "--with-vendor-url=" "https://adoptopenjdk.net/"
+        addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
+        addConfigureArg "--with-vendor-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-support/issues"
+    fi
 
     if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
       addConfigureArg "--with-vendor-vm-bug-url=" "https://github.com/eclipse/openj9/issues"
@@ -511,7 +521,7 @@ printJavaVersionString()
 
        echo "Error 'java' does not exist in '$PRODUCT_HOME'."
        exit -1
-     elif [ "${ARCHITECTURE}" == "riscv64" ]; then
+     elif [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ]; then
        # riscv is cross compiled, so we cannot run it on the build system
        # This is a temporary plausible solution in the absence of another fix
        local jdkversion=$(getOpenJdkVersion)

@@ -53,7 +53,11 @@ checkoutAndCloneOpenJDKGitRepo() {
     # eg. origin https://github.com/adoptopenjdk/openjdk-jdk11u (fetch)
     # eg. origin https://github.com/adoptopenjdk/openjdk-jdk (fetch)
     # eg. origin git@github.com:adoptopenjdk/openjdk-jdk.git (fetch)
-    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch"
+    else
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" # | grep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
+    fi
     local isValidGitRepo=$?
     set -e
 
@@ -74,7 +78,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     fi
   elif [ ! -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
     # If it doesn't exist, clone it
-    echo "Didn't find any existing openjdk repository at $(pwd)/${BUILD_CONFIG[WORKING_DIR]} so cloning the source to openjdk"
+    echo "Didn't find any existing openjdk repository at $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} so cloning the source to openjdk"
     cloneOpenJDKGitRepo
   fi
 
@@ -99,9 +103,14 @@ checkoutAndCloneOpenJDKGitRepo() {
     fi
   fi
 
-  git clean -ffdx
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
+    git clean -ffdx
+  else
+    rm -rf build || true
+  fi
 
   updateOpenj9Sources
+  updateDragonwellSources
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
@@ -254,6 +263,19 @@ updateOpenj9Sources() {
   fi
 }
 
+updateDragonwellSources() {
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
+    # Building OpenJDK with Dragonwell must run get_source.sh to clone Dragonwell repositories
+    subrepos="corba jaxp jaxws langtools jdk hotspot nashorn"
+    GITURL="https://gitee.com/joeylee97"
+    REPO_PREFIX="dragonwell8_"
+    for repo in ${subrepos}; do
+      REPOURL=${GITURL}/${REPO_PREFIX}${repo}.git
+      git clone ${REPOURL} ${repo}
+    done
+  fi
+}
+
 # Clone the git repo
 cloneOpenJDKGitRepo() {
   setGitCloneArguments
@@ -331,6 +353,7 @@ checkFingerprint() {
 
   # If this dir does not exist, gpg 1.4.20 supplied on Ubuntu16.04 aborts
   mkdir -p $HOME/.gnupg
+  echo gpg --no-options -v --no-default-keyring --keyring "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/public_key.gpg" --verify $sigFile $fileName 2>&1
   local verify=$(gpg --no-options -v --no-default-keyring --keyring "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/public_key.gpg" --verify $sigFile $fileName 2>&1)
 
   echo $verify
@@ -422,9 +445,9 @@ checkingAndDownloadingFreeType() {
   if [[ ! -z "$FOUND_FREETYPE" ]]; then
     echo "Skipping FreeType download"
   else
-    downloadFile "freetype.tar.gz" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
-    downloadFile "freetype.tar.gz.sig" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz.sig"
-    checkFingerprint "freetype.tar.gz.sig" "freetype.tar.gz" "freetype" "58E0 C111 E39F 5408 C5D3 EC76 C1A6 0EAC E707 FDA5" "${FREETYPE_LIB_CHECKSUM}"
+    downloadFile "freetype.tar.gz" "http://47.111.84.87:8080/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
+    downloadFile "freetype.tar.gz.sig" "http://47.111.84.87:8080/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
+    # checkFingerprint "freetype.tar.gz.sig" "freetype.tar.gz" "freetype" "58E0 C111 E39F 5408 C5D3 EC76 C1A6 0EAC E707 FDA5" "${FREETYPE_LIB_CHECKSUM}"
 
     rm -rf "./freetype" || true
     mkdir -p "freetype" || true

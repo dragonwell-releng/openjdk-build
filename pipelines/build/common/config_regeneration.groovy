@@ -1,6 +1,8 @@
 @Library('local-lib@master')
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
+import com.cloudbees.groovy.cps.NonCPS
+
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -68,7 +70,7 @@ class Regeneration implements Serializable {
         if (configuration.containsKey('configureArgs')) {
             def configConfigureArgs
             if (isMap(configuration.configureArgs)) {
-                configConfigureArgs = (configuration.configureArgs as Map<String, ?>).get(variant)
+                configConfigureArgs = (configuration.configureArgs as HashMap<String, ?>).get(variant)
             } else {
                 configConfigureArgs = configuration.configureArgs
             }
@@ -84,7 +86,7 @@ class Regeneration implements Serializable {
         def dockerImageValue = ""
         if (configuration.containsKey("dockerImage")) {
             if (isMap(configuration.dockerImage)) {
-                dockerImageValue = (configuration.dockerImage as Map<String, ?>).get(variant)
+                dockerImageValue = (configuration.dockerImage as HashMap<String, ?>).get(variant)
             } else {
                 dockerImageValue = configuration.dockerImage
             }
@@ -96,7 +98,7 @@ class Regeneration implements Serializable {
         def dockerFileValue = ""
         if (configuration.containsKey("dockerFile")) {
             if (isMap(configuration.dockerFile)) {
-                dockerFileValue = (configuration.dockerFile as Map<String, ?>).get(variant)
+                dockerFileValue = (configuration.dockerFile as HashMap<String, ?>).get(variant)
             } else {
                 dockerFileValue = configuration.dockerFile
             }
@@ -125,7 +127,7 @@ class Regeneration implements Serializable {
             def additionalNodeLabels
 
             if (isMap(configuration.additionalNodeLabels)) {
-                additionalNodeLabels = (configuration.additionalNodeLabels as Map<String, ?>).get(variant)
+                additionalNodeLabels = (configuration.additionalNodeLabels as HashMap<String, ?>).get(variant)
             } else {
                 additionalNodeLabels = configuration.additionalNodeLabels
             }
@@ -146,7 +148,7 @@ class Regeneration implements Serializable {
     String getBuildArgs(Map<String, ?> configuration, variant) {
         if (configuration.containsKey('buildArgs')) {
             if (isMap(configuration.buildArgs)) {
-                Map<String, ?> buildArgs = configuration.buildArgs as Map<String, ?>
+                Map<String, ?> buildArgs = configuration.buildArgs as HashMap<String, ?>
                 if (buildArgs.containsKey(variant)) {
                     return buildArgs.get(variant)
                 }
@@ -165,7 +167,7 @@ class Regeneration implements Serializable {
     List<String> getTestList(Map<String, ?> configuration) {
         if (configuration.containsKey("test")) {
             if (isMap(configuration.test)) {
-                return (configuration.test as Map).get("nightly") as List<String> // no need to check for release
+                return (configuration.test as HashMap).get("nightly") as List<String> // no need to check for release
             } else {
                 return configuration.test as List<String>
             }
@@ -236,7 +238,7 @@ class Regeneration implements Serializable {
     * @param config
     */
     def createJob(jobName, jobFolder, IndividualBuildConfig config) {
-        Map<String, ?> params = config.toMap().clone() as Map
+        Map<String, ?> params = config.toMap().clone() as HashMap
         params.put("JOB_NAME", jobName)
         params.put("JOB_FOLDER", jobFolder)
 
@@ -282,6 +284,8 @@ class Regeneration implements Serializable {
             def parser = new JsonSlurper()
             def get = new URL(query).openConnection()
             def response = parser.parseText(get.getInputStream().getText())
+            context.println query
+            context.println response
             return response
         } catch (Exception e) {
             // Failed to connect to jenkins api or a parsing error occured
@@ -290,13 +294,18 @@ class Regeneration implements Serializable {
         }
     }
 
+    @NonCPS
+    def getVersionNumber() {
+        return (javaVersion =~ /\d+/)[0]
+    }
+
     /**
     * Main function. Ran from regeneration_pipeline.groovy, this will be what jenkins will run first.
     */
     @SuppressWarnings("unused")
     def regenerate() {
         context.timestamps {
-            def versionNumbers = javaVersion =~ /\d+/
+            def versionNumber = getVersionNumber()
 
             /*
             * Stage: Check that the pipeline isn't in inprogress or queued up. Once clear, run the regeneration job
@@ -312,7 +321,7 @@ class Regeneration implements Serializable {
 
                     // Parse api response to only extract the relevant pipeline
                     getPipelines.jobs.name.each{ pipeline ->
-                        if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
+                        if (pipeline.contains("pipeline") && pipeline.contains(versionNumber)) {
                             Integer sleepTime = 900
                             Boolean inProgress = true
 
@@ -366,7 +375,7 @@ class Regeneration implements Serializable {
                 def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
                 Integer jdkHeadNum = Integer.valueOf(JobHelper.getAvailableReleases(context).tip_version)
 
-                if (Integer.valueOf(versionNumbers[0]) == jdkHeadNum) {
+                if (Integer.valueOf(versionNumber) == jdkHeadNum) {
                     javaToBuild = "jdk"
                     context.println "[INFO] This IS JDK-HEAD. javaToBuild is ${javaToBuild}."
                 } else {
@@ -396,7 +405,7 @@ class Regeneration implements Serializable {
                                     context.println "[INFO] FOUND MATCH! buildConfiguration key: ${key} and config file key: ${osarch}"
                                     keyFound = true
 
-                                    def platformConfig = buildConfigurations.get(key) as Map<String, ?>
+                                    def platformConfig = buildConfigurations.get(key) as HashMap<String, ?>
 
                                     name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
 
@@ -446,9 +455,9 @@ return {
     String jenkinsBuildRoot
         ->
         if (jobRootDir == null) jobRootDir = "build-scripts";
-        if (gitUri == null) gitUri = "https://github.com/AdoptOpenJDK/openjdk-build.git";
+        if (gitUri == null) gitUri = "https://github.com/joeyleeeeeee97/openjdk-build.git";
         if (gitBranch == null) gitBranch = "master";
-        if (jenkinsBuildRoot == null) jenkinsBuildRoot = "https://ci.adoptopenjdk.net/job/build-scripts/";
+        if (jenkinsBuildRoot == null) jenkinsBuildRoot = "http://47.111.84.87:8080/job/build-scripts/";
 
         return new Regeneration(javaVersion, buildConfigurations, targetConfigurations, currentBuild, context, jobRootDir, gitUri, gitBranch, jenkinsBuildRoot)
 }

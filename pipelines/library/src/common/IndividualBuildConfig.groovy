@@ -27,7 +27,7 @@ class IndividualBuildConfig implements Serializable {
     final boolean CLEAN_WORKSPACE
 
     IndividualBuildConfig(String json) {
-        this(new JsonSlurper().parseText(json) as Map)
+        this(new JsonSlurper().parseText(json) as HashMap)
     }
 
     IndividualBuildConfig(Map<String, ?> map) {
@@ -108,7 +108,7 @@ class IndividualBuildConfig implements Serializable {
     }
 
     IndividualBuildConfig fromJson(String json) {
-        def map = new groovy.json.JsonSlurper().parseText(json) as Map
+        def map = new groovy.json.JsonSlurper().parseText(json) as HashMap
         return new IndividualBuildConfig(map)
     }
 

@@ -111,7 +111,7 @@ class Builder implements Serializable {
     String getBuildArgs(Map<String, ?> configuration, variant) {
         if (configuration.containsKey('buildArgs')) {
             if (isMap(configuration.buildArgs)) {
-                Map<String, ?> buildArgs = configuration.buildArgs as Map<String, ?>
+                Map<String, ?> buildArgs = configuration.buildArgs as HashMap<String, ?>
                 if (buildArgs.containsKey(variant)) {
                     return buildArgs.get(variant)
                 }
@@ -127,7 +127,7 @@ class Builder implements Serializable {
         if (configuration.containsKey("test")) {
             def testJobType = release ? "release" : "nightly"
             if (isMap(configuration.test)) {
-                return (configuration.test as Map).get(testJobType) as List<String>
+                return (configuration.test as HashMap).get(testJobType) as List<String>
             } else {
                 return configuration.test as List<String>
             }
@@ -165,7 +165,7 @@ class Builder implements Serializable {
 
         if (configuration.containsKey("dockerImage") && !dockerOverride(configuration, variant)) {
             if (isMap(configuration.dockerImage)) {
-                dockerImageValue = (configuration.dockerImage as Map<String, ?>).get(variant)
+                dockerImageValue = (configuration.dockerImage as HashMap<String, ?>).get(variant)
             } else {
                 dockerImageValue = configuration.dockerImage
             }
@@ -179,7 +179,7 @@ class Builder implements Serializable {
 
         if (configuration.containsKey("dockerFile") && !dockerOverride(configuration, variant)) {
             if (isMap(configuration.dockerFile)) {
-                dockerFileValue = (configuration.dockerFile as Map<String, ?>).get(variant)
+                dockerFileValue = (configuration.dockerFile as HashMap<String, ?>).get(variant)
             } else {
                 dockerFileValue = configuration.dockerFile
             }
@@ -209,7 +209,7 @@ class Builder implements Serializable {
             def additionalNodeLabels
 
             if (isMap(configuration.additionalNodeLabels)) {
-                additionalNodeLabels = (configuration.additionalNodeLabels as Map<String, ?>).get(variant)
+                additionalNodeLabels = (configuration.additionalNodeLabels as HashMap<String, ?>).get(variant)
             } else {
                 additionalNodeLabels = configuration.additionalNodeLabels
             }
@@ -228,7 +228,7 @@ class Builder implements Serializable {
         if (configuration.containsKey('configureArgs')) {
             def configConfigureArgs
             if (isMap(configuration.configureArgs)) {
-                configConfigureArgs = (configuration.configureArgs as Map<String, ?>).get(variant)
+                configConfigureArgs = (configuration.configureArgs as HashMap<String, ?>).get(variant)
             } else {
                 configConfigureArgs = configuration.configureArgs
             }
@@ -254,7 +254,7 @@ class Builder implements Serializable {
 
                     //For each requested build type, generate a configuration
                     if (buildConfigurations.containsKey(target.key)) {
-                        def platformConfig = buildConfigurations.get(target.key) as Map<String, ?>
+                        def platformConfig = buildConfigurations.get(target.key) as HashMap<String, ?>
 
                         target.value.each { variant ->
                             String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"

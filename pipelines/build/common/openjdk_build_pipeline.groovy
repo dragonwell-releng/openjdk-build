@@ -741,7 +741,6 @@ class Build {
                             context.println "Failed test: ${e}"
                         }
                     }
-
                     //buildInstaller if needed
                     if (enableInstallers) {
                         buildInstaller(versionInfo)
