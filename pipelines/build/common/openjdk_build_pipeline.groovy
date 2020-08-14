@@ -731,7 +731,7 @@ class Build {
                     }
 
                     // Sign and archive jobs if needed
-                    sign(versionInfo)
+                    //sign(versionInfo)
 
                     if (enableTests && buildConfig.TEST_LIST.size() > 0) {
                         try {
