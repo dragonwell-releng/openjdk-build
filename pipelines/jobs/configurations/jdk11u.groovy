@@ -10,7 +10,8 @@ targetConfigurations = [
                 "hotspot",
                 "openj9",
                 "corretto",
-                "dragonwell"
+                "dragonwell",
+                "ajdk"
         ],
         "x64Windows"  : [
                 "hotspot",

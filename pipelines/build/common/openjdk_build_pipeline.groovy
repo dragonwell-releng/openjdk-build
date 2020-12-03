@@ -196,12 +196,14 @@ class Build {
             suffix = "adoptopenjdk/openjdk-${buildConfig.JAVA_TO_BUILD}"
         } else if (buildConfig.VARIANT == "dragonwell") {
             suffix = "alibaba/dragonwell${javaNumber}"
+        } else if (buildConfig.VARIANT == "ajdk") {
+            suffix = "xcode/" + javaNumber == 8 ? "jdk8u" : "jdk11"
         } else {
             context.error("Unrecognised build variant '${buildConfig.VARIANT}' ")
             throw new Exception()
         }
 
-        jdkRepo = "https://github.com/${suffix}"
+        jdkRepo = "https://gitlab.alibaba-inc.com/${suffix}"
         if (buildConfig.BUILD_ARGS.count("--ssh") > 0) {
             jdkRepo = "git@github.com:${suffix}"
         }
