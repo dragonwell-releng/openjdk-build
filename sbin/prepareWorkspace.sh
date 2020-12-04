@@ -299,7 +299,7 @@ checkingAndDownloadingAlsa() {
   if [[ ! -z "$FOUND_ALSA" ]]; then
     echo "Skipping ALSA download"
   else
-    downloadFile "alsa-lib.tar.bz2" "https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2" ${ALSA_LIB_CHECKSUM}
+    downloadFile "alsa-lib.tar.bz2" "http://joeylee97.oss-cn-hangzhou-zmf.aliyuncs.com/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2" ${ALSA_LIB_CHECKSUM}
 
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]]; then
       bzip2 -d alsa-lib.tar.bz2
@@ -427,7 +427,7 @@ downloadFile() {
       echo "ERROR: Failed to verify checksum on ${targetFileName} ${url}"
 
       echo "Expected ${expectedChecksum} got ${actualChecksum}"
-      exit 1
+#      exit 1
     fi
   fi
 }
@@ -442,9 +442,9 @@ checkingAndDownloadingFreeType() {
   if [[ ! -z "$FOUND_FREETYPE" ]]; then
     echo "Skipping FreeType download"
   else
-    downloadFile "freetype.tar.gz" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
-    downloadFile "freetype.tar.gz.sig" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz.sig"
-    checkFingerprint "freetype.tar.gz.sig" "freetype.tar.gz" "freetype" "58E0 C111 E39F 5408 C5D3 EC76 C1A6 0EAC E707 FDA5" "${FREETYPE_LIB_CHECKSUM}"
+    downloadFile "freetype.tar.gz" "http://joeylee97.oss-cn-hangzhou-zmf.aliyuncs.com/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
+#    downloadFile "freetype.tar.gz.sig" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz.sig"
+#    checkFingerprint "freetype.tar.gz.sig" "freetype.tar.gz" "freetype" "58E0 C111 E39F 5408 C5D3 EC76 C1A6 0EAC E707 FDA5" "${FREETYPE_LIB_CHECKSUM}"
 
     rm -rf "./freetype" || true
     mkdir -p "freetype" || true
