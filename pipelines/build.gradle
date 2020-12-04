@@ -24,7 +24,7 @@ sourceSets {
 repositories {
     mavenCentral()
     maven {
-        url "https://repository.mulesoft.org/nexus/content/repositories/public/"
+        url "http://maven.aliyun.com/nexus/content/groups/public"
     }
     maven {
         url 'https://repo.jenkins-ci.org/releases'
