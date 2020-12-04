@@ -175,6 +175,17 @@ setRepository() {
     repository="https://github.com/${suffix}"
   fi
 
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_AJDK}" ]]; then
+    local repo
+    if [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
+      repo="jdk8u"
+    else
+      repo="jdk11"
+    fi
+
+    repository="https://gitlab.alibaba-inc.com/xcode/${repo}"
+  fi
+
   repository="$(echo "${repository}" | awk '{print tolower($0)}')"
 
   BUILD_CONFIG[REPOSITORY]="${BUILD_CONFIG[REPOSITORY]:-${repository}}"
