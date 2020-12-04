@@ -23,7 +23,7 @@ class Config11 {
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
-                dockerImage         : 'adoptopenjdk/centos6_build_image',
+                dockerImage         : 'reg.docker.alibaba-inc.com/ajdk/centos6_build_image',
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],

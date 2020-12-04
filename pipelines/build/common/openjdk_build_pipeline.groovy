@@ -170,6 +170,8 @@ class Build {
                 jdkBranch = 'dev'
             } else if (buildConfig.VARIANT == "dragonwell") {
                 jdkBranch = 'master'
+            } else if (buildConfig.VARIANT == "ajdk") {
+                jdkBranch = 'master'
             } else {
                 context.error("Unrecognised build variant '${buildConfig.VARIANT}' ")
                 throw new Exception()
