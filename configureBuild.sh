@@ -146,6 +146,8 @@ setVariablesForConfigure() {
 setRepository() {
 
   local suffix
+  local company="alibaba"
+  local place="inc"
 
   # Location of Extensions for OpenJ9 project
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
@@ -183,7 +185,7 @@ setRepository() {
       repo="jdk11"
     fi
 
-    repository="https://gitlab.alibaba-inc.com/xcode/${repo}"
+    repository="https://gitlab.${company}-${place}.com/xcode/${repo}"
   fi
 
   repository="$(echo "${repository}" | awk '{print tolower($0)}')"
