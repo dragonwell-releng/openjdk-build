@@ -108,6 +108,7 @@ checkoutAndCloneOpenJDKGitRepo() {
 
   updateOpenj9Sources
   updateDragonwellSources
+  updateAJDKSources
 
   createSourceTagFile
 
@@ -270,14 +271,18 @@ updateDragonwellSources() {
   fi
 }
 
-updateDragonwellSources() {
-  if [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ]]; then
+updateAJDKSources() {
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_AJDK}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ]]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     git clone http://gitlab.alibaba-inc.com/xcode/mx.git
     git clone http://gitlab.alibaba-inc.com/xcode/graalvm.git
     cd graalvm/compiler || return
     python3 "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/mx/mx.py" --java-home ${BUILD_CONFIG[JDK_BOOT_DIR]} updategraalinopenjdk "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" 11 || true
     rm -rf ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/src/jdk.aot/share/classes/jdk.tools.jaotc.test
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_AJDK}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
+    bash get_source_ajdk.sh --site gitlab 
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
