@@ -43,7 +43,7 @@ source "$SCRIPT_DIR/common/constants.sh"
 source "$SCRIPT_DIR/common/common.sh"
 
 export LIB_DIR=$(crossPlatformRealPath "${SCRIPT_DIR}/../pipelines/")
-
+export $JEMALLOC_PATH=/usr/lib/$(arch)
 export jreTargetPath
 export CONFIGURE_ARGS=""
 export ADDITIONAL_MAKE_TARGETS=""
