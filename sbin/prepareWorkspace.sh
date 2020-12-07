@@ -277,6 +277,7 @@ updateDragonwellSources() {
     git clone http://gitlab.alibaba-inc.com/xcode/graalvm.git
     cd graalvm/compiler || return
     python3 "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/mx/mx.py" --java-home ${BUILD_CONFIG[JDK_BOOT_DIR]} updategraalinopenjdk "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" 11 || true
+    rm -rf ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/src/jdk.aot/share/classes/jdk.tools.jaotc.test
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
