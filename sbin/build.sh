@@ -521,6 +521,17 @@ parseJavaVersionString() {
   echo $version
 }
 
+assembleDependencyLibs() {
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_AJDK}" ]; then
+    if [ "${ARCHITECTURE}" == "arm" ]; then
+    cp -f /usr/lib/hsdis/hsdis-amd64.so "$1/lib"
+    else
+    cp -f /usr/lib/hsdis/hsdis-amd64.so "$1/lib"
+    fi
+    cp -f /usr/lib/jemalloc-4.5.0/$(arch)/lib/libjemalloc.so.2 "$1/lib"
+  fi
+}
+
 # Print the version string so we know what we've produced
 printJavaVersionString() {
   stepIntoTheWorkingDirectory
@@ -535,6 +546,9 @@ printJavaVersionString() {
     PRODUCT_HOME=$(ls -d ${PWD}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
     ;;
   esac
+
+  assembleDependencyLibs "${PRODUCT_HOME}"
+
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "'$PRODUCT_HOME' found"
      if [ ! -r "$PRODUCT_HOME/bin/java" ]; then
