@@ -167,4 +167,4 @@ then
 fi
 
 export CC=/usr/bin/gcc
-export CC=/usr/bin/g++
+export CXX=/usr/bin/g++
