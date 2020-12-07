@@ -525,7 +525,7 @@ parseJavaVersionString() {
 assembleDependencyLibs() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_AJDK}" ]; then
     if [ "${ARCHITECTURE}" == "arm" ]; then
-    cp -f /usr/lib/hsdis/hsdis-amd64.so "$1/lib"
+    cp -f /usr/lib/hsdis/hsdis-aarch64.so "$1/lib"
     else
     cp -f /usr/lib/hsdis/hsdis-amd64.so "$1/lib"
     fi
