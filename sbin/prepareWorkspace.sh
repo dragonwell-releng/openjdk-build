@@ -275,7 +275,7 @@ updateDragonwellSources() {
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     git clone http://gitlab.alibaba-inc.com/xcode/mx.git
     git clone http://gitlab.alibaba-inc.com/xcode/graalvm.git
-    ./mx/mx --java-home ${BUILD_CONFIG[JDK_BOOT_DIR]} updategraalinopenjdk "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" 11
+    python3 mx/mx.py --java-home ${BUILD_CONFIG[JDK_BOOT_DIR]} updategraalinopenjdk "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" 11
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
