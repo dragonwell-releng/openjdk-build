@@ -196,6 +196,7 @@ configureVersionStringParameter() {
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/eclipse/openj9/issues"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_AJDK}" ]]; then
     BUILD_CONFIG[VENDOR]="Alibaba"
+    BUILD_CONFIG[VENDOR]="\"(Alibaba AJDK)\""
     BUILD_CONFIG[VENDOR_URL]="http://www.alibabagroup.com"
     BUILD_CONFIG[VENDOR_BUG_URL]="mailto:jvm@list.alibaba-inc.com"
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="mailto:jvm@list.alibaba-inc.com"
