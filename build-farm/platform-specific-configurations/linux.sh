@@ -166,3 +166,5 @@ then
 	BUILD_ARGS="${BUILD_ARGS} -F"
 fi
 
+export CC=/usr/bin/gcc
+export CC=/usr/bin/g++
