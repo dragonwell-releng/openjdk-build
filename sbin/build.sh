@@ -524,12 +524,24 @@ parseJavaVersionString() {
 
 assembleDependencyLibs() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_AJDK}" ]; then
-    if [ "${ARCHITECTURE}" == "arm" ]; then
-    cp -f /usr/lib/hsdis/hsdis-aarch64.so "$1/lib"
+    if [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
+      if [ "${ARCHITECTURE}" == "arm" ]; then
+        cp -f /usr/lib/hsdis/hsdis-aarch64.so "$1/jre/lib/aarch64"
+        cp -f /usr/lib/jemalloc-4.5.0/$(arch)/lib/libjemalloc.so.2 "$1/jre/lib/aarch64"
+        cp -f /usr/lib/jemalloc-4.5.0/$(arch)/lib/libjemalloc.so.2 "$1/lib/aarch64"
+      else
+        cp -f /usr/lib/hsdis/hsdis-amd64.so "$1/jre/lib/amd64"
+        cp -f /usr/lib/jemalloc-4.5.0/$(arch)/lib/libjemalloc.so.2 "$1/jre/lib/amd64"
+        cp -f /usr/lib/jemalloc-4.5.0/$(arch)/lib/libjemalloc.so.2 "$1/lib/amd64"
+      fi
     else
-    cp -f /usr/lib/hsdis/hsdis-amd64.so "$1/lib"
+      if [ "${ARCHITECTURE}" == "arm" ]; then
+        cp -f /usr/lib/hsdis/hsdis-aarch64.so "$1/lib"
+      else
+        cp -f /usr/lib/hsdis/hsdis-amd64.so "$1/lib"
+      fi
+      cp -f /usr/lib/jemalloc-4.5.0/$(arch)/lib/libjemalloc.so.2 "$1/lib"
     fi
-    cp -f /usr/lib/jemalloc-4.5.0/$(arch)/lib/libjemalloc.so.2 "$1/lib"
   fi
 }
 
