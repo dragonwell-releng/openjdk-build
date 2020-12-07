@@ -25,6 +25,8 @@
 set +e
 
 alreadyConfigured=$(/usr/bin/find . -name "config.status")
+export BASIC_LDFLAGS_JDK_LIB_ONLY="-L$JEMALLOC_PATH/aarch64/lib -ljemalloc"
+ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$JEMALLOC_PATH/aarch64/lib/
 
 if [[ ! -z "$alreadyConfigured" ]] ; then
   echo "Not reconfiguring due to the presence of config.status"

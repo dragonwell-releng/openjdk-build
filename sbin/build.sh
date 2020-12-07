@@ -194,6 +194,11 @@ configureVersionStringParameter() {
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/eclipse/openj9/issues"
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_AJDK}" ]]; then
+    BUILD_CONFIG[VENDOR]="Alibaba"
+    BUILD_CONFIG[VENDOR_URL]="http://www.alibabagroup.com"
+    BUILD_CONFIG[VENDOR_BUG_URL]="mailto:jvm@list.alibaba-inc.com"
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]="mailto:jvm@list.alibaba-inc.com"
   fi
 
   addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]:-"AdoptOpenJDK"}"
