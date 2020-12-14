@@ -205,7 +205,7 @@ class Build {
             throw new Exception()
         }
 
-        jdkRepo = "https://gitlab.alibaba-inc.com/${suffix}"
+        jdkRepo = "https://gitlab.alibaba-inc.com/${suffix}.git"
         if (buildConfig.BUILD_ARGS.count("--ssh") > 0) {
             jdkRepo = "git@github.com:${suffix}"
         }
