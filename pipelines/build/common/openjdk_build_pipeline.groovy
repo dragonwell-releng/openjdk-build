@@ -206,7 +206,7 @@ class Build {
             throw new Exception()
         }
 
-        jdkRepo = "https://gitlab.alibaba-inc.com/xcode/${suffix}.git"
+        jdkRepo = "https://gitlab.alibaba-inc.com/${suffix}.git"
         context.println "get jdk repo for test : ${jdkRepo}"
         if (buildConfig.BUILD_ARGS.count("--ssh") > 0) {
             jdkRepo = "git@github.com:${suffix}"
