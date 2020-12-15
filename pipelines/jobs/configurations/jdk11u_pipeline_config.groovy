@@ -28,6 +28,9 @@ class Config11 {
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 test                : 'default',
+                buildArgs: [
+                        ajdk : '--gradle-user-home-dir /root/.gradle --jdk-boot-dir /usr/lib/jvm/jdk-11'
+                ],
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver --enable-dtrace=auto',
                         "hotspot"     : '--enable-dtrace=auto',

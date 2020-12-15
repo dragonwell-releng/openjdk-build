@@ -28,7 +28,13 @@ class Config8 {
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile',
                         dragonwell: 'pipelines/build/dockerFiles/dragonwell.dockerfile'
                 ],
+                dockerImage: [
+                        ajdk : 'reg.docker.alibaba-inc.com/ajdk/centos6_build_image'
+                ],
                 test                 : 'default',
+                buildArgs: [
+                        ajdk : '--gradle-user-home-dir /root/.gradle --jdk-boot-dir /usr/lib/ajdk/x86-64/j2sdk-image/'
+                ],
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver',
                         "dragonwell"  : '--enable-jfr --enable-unlimited-crypto --with-jvm-variants=server  --with-zlib=system',

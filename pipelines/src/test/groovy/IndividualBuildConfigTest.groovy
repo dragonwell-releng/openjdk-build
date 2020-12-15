@@ -29,7 +29,7 @@ class IndividualBuildConfigTest {
                  PUBLISH_NAME              : "m",
                  ADOPT_BUILD_NUMBER        : "n",
                  ENABLE_TESTS              : true,
-                 ENABLE_INSTALLERS         : true,
+                 ENABLE_INSTALLERS         : false,
                  CLEAN_WORKSPACE           : false]
         )
 

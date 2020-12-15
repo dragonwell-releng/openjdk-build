@@ -1037,7 +1037,7 @@ class Build {
                 context.println "File name: ${filename}"
 
                 def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
-                def enableInstallers = Boolean.valueOf(buildConfig.ENABLE_INSTALLERS)
+                def enableInstallers = false
                 def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
 
                 context.stage("queue") {
