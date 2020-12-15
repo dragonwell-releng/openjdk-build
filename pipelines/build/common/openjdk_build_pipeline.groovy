@@ -189,6 +189,7 @@ class Build {
         def jdkRepo
         def suffix
         def javaNumber = getJavaVersionNumber()
+        context.println "get jdk javaNumber for test : ${javaNumber}"
 
         if (buildConfig.VARIANT == "corretto") {
             suffix="corretto/corretto-${javaNumber}"
@@ -199,7 +200,7 @@ class Build {
         } else if (buildConfig.VARIANT == "dragonwell") {
             suffix = "alibaba/dragonwell${javaNumber}"
         } else if (buildConfig.VARIANT == "ajdk") {
-            suffix = "xcode/" + javaNumber == "8" ? "jdk8u" : "jdk11"
+            suffix = "xcode/" + (javaNumber == 8 ? "jdk8u" : "jdk11")
         } else {
             context.error("Unrecognised build variant '${buildConfig.VARIANT}' ")
             throw new Exception()
