@@ -541,6 +541,7 @@ assembleDependencyLibs() {
         cp -f /usr/lib/hsdis/hsdis-amd64.so "$1/lib"
       fi
       cp -f /usr/lib/jemalloc-4.5.0/$(arch)/lib/libjemalloc.so.2 "$1/lib"
+      cp -f /usr/lib/EagerAppCDS "$1/lib"
     fi
   fi
 }
