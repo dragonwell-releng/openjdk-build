@@ -262,7 +262,7 @@ class Build {
 												context.string(name: 'JDK_REPO', value: jdkRepo),
 												context.string(name: 'JDK_BRANCH', value: jdkBranch),
 												context.string(name: 'OPENJ9_BRANCH', value: openj9Branch),
-												context.string(name: 'LABEL_ADDITION', value: additionalTestLabel),
+												context.string(name: 'LABEL_ADDITION', value: "${additionalTestLabel}"),
 												context.string(name: 'KEEP_REPORTDIR', value: "${keep_test_reportdir}"),
 												context.string(name: 'ACTIVE_NODE_TIMEOUT', value: "${buildConfig.ACTIVE_NODE_TIMEOUT}")]
 							}
