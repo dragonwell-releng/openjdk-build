@@ -43,7 +43,7 @@ class Config11 {
                 additionalNodeLabels: [
                         hotspot:    'win2012',
                         openj9:     'win2012&&vs2017',
-                        dragonwell: 'win2012&&vs2017'
+                        dragonwell: 'win2012'
                 ],
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
@@ -120,7 +120,7 @@ class Config11 {
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
-                dockerImage         : 'adoptopenjdk/centos7_build_image',
+                dockerImage         : 'joeylee97/dragonwell_centos7_gcc9_build_image',
                 test                : 'default',
                 configureArgs       : [
                         "hotspot" : '--enable-dtrace=auto',
@@ -170,9 +170,17 @@ class Config11 {
                 arch                 : 'riscv64',
                 crossCompile         : 'x64',
                 buildArgs            : '--cross-compile',
-                configureArgs        : [
-                        "openj9"       : '--disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root',
-                        "bisheng"      : '--openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root'
+                configureArgs        : '--disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root'
+        ],
+        x64AlpineLinux  : [
+                os                  : 'alpine-linux',
+                arch                : 'x64',
+                dockerImage         : 'adoptopenjdk/alpine3_build_image',
+                test                : [
+                        // TODO: enable tests
+                        nightly: [],
+                        // release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
+                        release: []
                 ]
         ],
   ]
