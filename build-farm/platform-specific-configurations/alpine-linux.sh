@@ -21,10 +21,7 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 # ccache seems flaky on alpine
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
 
-if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
-exit 0
-fi
-
+if [ "${VARIANT}" != "${BUILD_VARIANT_DRAGONWELL}" ]; then
 BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
 BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
@@ -64,4 +61,5 @@ executedJavaVersion=$?
 if [ $executedJavaVersion -ne 0 ]; then
     echo "Failed to obtain or find a valid boot jdk"
     exit 1
+fi
 fi
