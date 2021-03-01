@@ -176,6 +176,9 @@ class Config11 {
                 os                  : 'alpine-linux',
                 arch                : 'x64',
                 dockerImage         : 'adoptopenjdk/alpine3_build_image',
+                dockerFile: [
+                        openj9  : 'pipelines/build/dockerFiles/alpine_dragonwell.dockerfile'
+                ],
                 test                : [
                         // TODO: enable tests
                         nightly: [],
