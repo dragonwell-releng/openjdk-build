@@ -140,7 +140,7 @@ fi
 if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 11 ] && [ -r /usr/local/gcc-9.3.0/ ]; then
   export PATH=/usr/local/gcc-9.3.0/bin:$PATH
   export CC=/usr/local/gcc-9.3.0/bin/gcc
-  export CC=/usr/local/gcc-9.3.0/bin/g++
+  export CXX=/usr/local/gcc-9.3.0/bin/g++
 elif [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
   export PATH=/usr/local/gcc/bin:$PATH
   [ -r /usr/local/gcc/bin/gcc-7.5 ] && export CC=/usr/local/gcc/bin/gcc-7.5
