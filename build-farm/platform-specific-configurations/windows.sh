@@ -26,7 +26,7 @@ export OPENJ9_NASM_VERSION=2.13.03
 export OPENSSL_VERSION=1.1.1j
 
 TOOLCHAIN_VERSION=""
-
+if [ "${VARIANT}" != "${BUILD_VARIANT_DRAGONWELL}" ]; then
 if [ "$ARCHITECTURE" == "aarch64" ] && [ "$JAVA_FEATURE_VERSION" == 16 ]; then
   # Windows aarch64 jdk16 cross compiles requires same version boot jdk
   BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION))"
@@ -86,7 +86,7 @@ if [ $executedJavaVersion -ne 0 ]; then
     exit 1
 fi
 "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
-
+fi
 if [ "${ARCHITECTURE}" == "x86-32" ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --with-target-bits=32 --target=x86"
