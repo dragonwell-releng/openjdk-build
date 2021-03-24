@@ -65,10 +65,12 @@ class Config11 {
                 arch                : 'x86-32',
                 additionalNodeLabels: [
                         hotspot: 'win2012',
-                        openj9:  'win2012&&mingw-standalone'
+                        openj9:  'win2012&&mingw-standalone',
+                        dragonwell:  'vs2017'
                 ],
                 buildArgs : [
-                        hotspot : '--jvm-variant client,server'
+                        hotspot : '--jvm-variant client,server',
+                        dragonwell : '--jdk-boot-dir  /cygdrive/c/Jenkins/jdk11/'
                 ],
                 test                : 'default'
         ],
