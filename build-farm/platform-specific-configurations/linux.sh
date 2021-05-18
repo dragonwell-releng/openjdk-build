@@ -115,6 +115,8 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       # TODO: Temporary change until https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/2145 is resolved
       if [ "$BOOT_JDK_VERSION" -ge 15 ] && [ "$VARIANT" = "openj9" ] && [ "$ARCHITECTURE" = "aarch64" ]; then
         apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk"
+      elif [ "${ARCHITECTURE}" == "riscv64" ] && [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ "$BOOT_JDK_VERSION" -ge 15 ]; then
+        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/linux/x64/jdk/hotspot/normal/adoptopenjdk"
       else
         apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/adoptopenjdk"
       fi
@@ -182,8 +184,8 @@ if [ "${ARCHITECTURE}" == "riscv64" ] && [ "$(uname -m)" == "x86_64" ]; then
     mkdir "$BUILDJDK"
     wget -q -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/x64/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
     "$BUILDJDK/bin/java" -version 2>&1 | sed 's/^/CROSSBUILD JDK > /g'
-    CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-jdk=$BUILDJDK --disable-ddr"
-  elif [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-jdk=$BUILDJDK"
+  elif [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ] || [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
     if [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
       BUILD_CC=/usr/local/gcc/bin/gcc-7.5
       BUILD_CXX=/usr/local/gcc/bin/g++-7.5
@@ -198,13 +200,16 @@ if [ "${ARCHITECTURE}" == "riscv64" ] && [ "$(uname -m)" == "x86_64" ]; then
   echo RISC-V cross-compilation setup ...  Setting RISCV64, LD_LIBRARY_PATH, PATH, CC, CXX
   export RISCV64=/opt/riscv_toolchain_linux
   export LD_LIBRARY_PATH=$RISCV64/lib64
-  if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
+  if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ] || [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_LIBRARY_PATH
   fi
   export PATH="$RISCV64/bin:$PATH"
   export CC=$RISCV64/bin/riscv64-unknown-linux-gnu-gcc
   export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
   CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root --with-boot-jdk=$JDK_BOOT_DIR"
+  if [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
+    CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} BUILD_CC=$BUILD_CC BUILD_CXX=$BUILD_CXX"
+  fi
   if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
     CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jvm-features=shenandoahgc BUILD_CC=$BUILD_CC BUILD_CXX=$BUILD_CXX"
   fi

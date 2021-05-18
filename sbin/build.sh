@@ -887,6 +887,9 @@ getFirstTagFromOpenJDKGitRepo() {
 
   # Choose tag search keyword and get cmd based on version
   local TAG_SEARCH="jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}*+*"
+  if [ "${ARCHITECTURE}" == "riscv64" ]; then
+    TAG_SEARCH="jdk-16*+*"
+  fi
   local get_tag_cmd=$jdk11plus_get_tag_cmd
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
     TAG_SEARCH="jdk8u*-b*"
