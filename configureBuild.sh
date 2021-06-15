@@ -172,7 +172,7 @@ setRepository() {
   elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
     suffix="adoptium/aarch32-jdk8u";
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ "${ARCHITECTURE}" == "riscv64" ]; then
-    suffix="openjdk/jdk-sandbox"
+    suffix="riscv/riscv-openjdk"
   else
     suffix="adoptium/${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
   fi
