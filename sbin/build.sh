@@ -159,9 +159,9 @@ getOpenJdkVersion() {
       else
         local minorNum="$(cut -d'.' -f 2 <${dragonwellVerFile})"
         local updateNum="$(cut -d'.' -f 3 <${dragonwellVerFile})"
-        export dragonwellPatch="$(cut -d'.' -f 4 <${dragonwellVerFile})"
+        local dragonwellPatch="$(cut -d'.' -f 4 <${dragonwellVerFile})"
         local buildNum="$(cut -d'.' -f 5 <${dragonwellVerFile})"
-        version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
+        version="jdk-11.${minorNum}.${updateNum}.${dragonwellPatch}+${buildNum}"
       fi
     else
       version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
@@ -288,6 +288,10 @@ configureVersionStringParameter() {
     if [ -z "${buildNumber}" ]; then
       # Get build number (eg.10) from tag of potential format "jdk-11.0.4+10_adopt"
       buildNumber=$(echo "${openJdkVersion}" | cut -d_ -f1 | cut -f2 -d"+")
+    fi
+    if [ -z "${dragonwellPatch}" ]; then
+      # Get build number (eg.10) from tag of potential format "jdk-11.0.4+10_adopt"
+      dragonwellPatch=$(echo "${openJdkVersion}" | awk -F "[+.]" '{ print $4 }')
     fi
 
     if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
