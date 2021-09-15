@@ -166,7 +166,7 @@ setRepository() {
   elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "aarch64" ]; then
     suffix="adoptopenjdk/openjdk-aarch64-jdk8u";
   else
-    suffix="adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
+    suffix="adoptium/${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
   fi
 
   local repository
