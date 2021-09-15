@@ -46,4 +46,5 @@ export BUILD_VARIANT_BISHENG="bisheng"
 
 export GIT_TAGS_TO_SEARCH=100
 
-export ADOPTOPENJDK_MD_MARKER_FILE="AdoptOpenJDK.md"
+# Path of marker file in mirror repos containing required text
+export TEMURIN_MARKER_FILE="README.JAVASE"
