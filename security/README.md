@@ -2,7 +2,7 @@
 
 ## CA Certificates
 
-The cacerts file that OpenJDK maintains lacks a number of CA certificates that are present in common browsers. As a result, users of OpenJDK cannot connect to servers with Java that they can connect to with their browsers. This causes confusion and [support requests][support-issues]. 
+The cacerts file that OpenJDK maintains lacks a number of CA certificates that are present in common browsers. As a result, users of OpenJDK cannot connect to servers with Java that they can connect to with their browsers. This causes confusion and [support requests][support-issues].
 
 In May 2020, [we reached out to OpenJDK to discuss this situation][jdk-dev-thread], but no consensus was reached. Consequently, the [AdoptOpenJDK TSC decided to deviate from OpenJDK and distribute a custom trust store][tsc-decision] based on [Mozilla's list of trusted CA certificates][mozilla-certdata] which is also used by many Linux distributions.
 
@@ -17,7 +17,9 @@ The `cacerts` file is build as part of the regular JDK build from source. The re
 
 To generate a new `cacerts` file, run:
 
-    $ ./mk-cacerts.sh
+```shell
+./mk-cacerts.sh
+```
 
 If anybody ever plans to replace `mk-ca-bundle.pl`, be sure to read [Can I use Mozilla's set of CA certificates?][can-i-use-mozilla].
 
@@ -35,9 +37,9 @@ The updated list will be picked up during the next build.
 
 The resulting cacerts file is licensed under the terms of the [source file][mozilla-certdata], the Mozilla Public License, v.2.0.
 
-## Future Work
+## Updater
 
-* Create a GitHub bot that checks whether `certdata.txt` needs updating and automatically creates a PR.
+The `certdata.txt` is automatically updated as part of a GitHub actions workflow. See the [workflow file](./github/workflows/ca-cert-updater.yml).
 
  [support-issues]: https://github.com/AdoptOpenJDK/openjdk-support/issues/13
  [jdk-dev-thread]: https://mail.openjdk.java.net/pipermail/jdk-dev/2020-May/004305.html

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,24 +20,25 @@ set -e
 PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ## autodetect defaults to improve usability when running this for debugging/testing
-## On most platforms "uname -p" matches what the OS name used in the adoptopenjdk
+## On most platforms "uname -p" matches what the OS name used in the Temurin
 ## scripts uses, but not on xLinux, Windows or AIX.
 
 if [ -z "$ARCHITECTURE"  ]; then
-   ARCHITECTURE=`uname -p`
-   if [ "$OSTYPE"       = "cygwin"  ]; then ARCHITECTURE=`uname -m`; fi # Windows
+   ARCHITECTURE=$(uname -p)
+   if [ "$OSTYPE"       = "cygwin"  ]; then ARCHITECTURE=$(uname -m); fi # Windows
    if [ "$ARCHITECTURE" = "x86_64"  ]; then ARCHITECTURE=x64;        fi # Linux/x64
    if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;        fi # Solaris/x64
    if [ "$ARCHITECTURE" = "sparc"   ]; then ARCHITECTURE=sparcv9;    fi # Solaris/SPARC
    if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;      fi # AIX
+   if [ "$ARCHITECTURE" = "armv7l"  ]; then ARCHITECTURE=arm;        fi # Linux/arm32
    echo ARCHITECTURE not defined - assuming $ARCHITECTURE
    export ARCHITECTURE
 fi
 
-## AdoptOpenJDK uses "windows" instead of "cygwin" for the OS name on Windows
+## Temurin uses "windows" instead of "cygwin" for the OS name on Windows
 ## so needs to be special cased - on everthing else "uname" is valid
 if [ -z "$TARGET_OS" ]; then
-  TARGET_OS=`uname`
+  TARGET_OS=$(uname)
   if [ "$OSTYPE" = "cygwin" ]; then TARGET_OS=windows ; fi
   if [ "$OSTYPE" = "SunOS"  ]; then TARGET_OS=solaris ; fi
   echo TARGET_OS not defined - assuming you want "$TARGET_OS"
@@ -55,9 +57,19 @@ if [ -z "$JAVA_TO_BUILD" ]; then
   fi
 fi
 
-[ -z "$JAVA_TO_BUILD" ] && echo JAVA_TO_BUILD not defined - set to e.g. jdk8u && SANEVARS=1
+[ -z "$JAVA_TO_BUILD" ] && echo JAVA_TO_BUILD not defined - set to e.g. jdk8u
 [ -z "$VARIANT"       ] && echo VARIANT not defined - assuming hotspot && export VARIANT=hotspot
 [ -z "$FILENAME"      ] && echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-${VARIANT}.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-${VARIANT}.tar.gz"
+
+# shellcheck source=sbin/common/constants.sh
+source "$PLATFORM_SCRIPT_DIR/../sbin/common/constants.sh"
+
+# Check that the given variant is in our list of common variants
+# shellcheck disable=SC2086,SC2143
+if [ -z "$(echo ${BUILD_VARIANTS} | grep -w ${VARIANT})" ]; then
+  echo "[ERROR] ${VARIANT} is not a recognised build variant. Valid Variants = ${BUILD_VARIANTS}"
+  exit 1
+fi
 
 ## Very very build farm specific configuration
 export OPERATING_SYSTEM
@@ -73,8 +85,8 @@ then
     until [ "$retryCount" -ge "$retryMax" ]
     do
         # Use Adopt API to get the JDK Head number
-        echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
-        JAVA_FEATURE_VERSION=$(curl -q https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
+        echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptium.net/v3/info/available_releases)..."
+        JAVA_FEATURE_VERSION=$(curl -q https://api.adoptium.net/v3/info/available_releases | awk '/tip_version/{print$2}')
 
         # Checks the api request was successful and the return value is a number
         if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
@@ -90,8 +102,8 @@ then
     # Fail build if we still can't find the head number
     if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
     then
-        echo "Failed ${retryCount} times to query or parse the adopt api. Dumping headers via curl -v https://api.adoptopenjdk.net/v3/info/available_releases and exiting..."
-        curl -v https://api.adoptopenjdk.net/v3/info/available_releases
+        echo "Failed ${retryCount} times to query or parse the adopt api. Dumping headers via curl -v https://api.adoptium.net/v3/info/available_releases and exiting..."
+        curl -v https://api.adoptium.net/v3/info/available_releases
         echo curl returned RC $? in make_adopt_build_farm.sh
         exit 1
     fi
@@ -105,7 +117,6 @@ echo "OS: ${OPERATING_SYSTEM}"
 echo "SCM_REF: ${SCM_REF}"
 OPTIONS=""
 
-EXTENSION=""
 # shellcheck disable=SC2034
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=""
 CONFIGURE_ARGS=${CONFIGURE_ARGS:-""}
@@ -116,9 +127,16 @@ if [ -z "${JDK_BOOT_VERSION}" ]
 then
   echo "Detecting boot jdk for: ${JAVA_TO_BUILD}"
   echo "Found build version: ${JAVA_FEATURE_VERSION}"
-  JDK_BOOT_VERSION=$(($JAVA_FEATURE_VERSION-1))
+  JDK_BOOT_VERSION=$(( JAVA_FEATURE_VERSION - 1 ))
+  if [ "${JAVA_FEATURE_VERSION}" == "11" ] && [ "${VARIANT}" == "openj9" ]; then
+    # OpenJ9 only supports building jdk-11 with jdk-11
+    JDK_BOOT_VERSION="11"
+  fi
 fi
 echo "Required boot JDK version: ${JDK_BOOT_VERSION}"
+
+# export for platform specific scripts
+export JDK_BOOT_VERSION
 
 # shellcheck source=build-farm/set-platform-specific-configurations.sh
 source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
@@ -137,7 +155,8 @@ case "${JDK_BOOT_VERSION}" in
       "14")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK14_BOOT_DIR}";;
       "15")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK15_BOOT_DIR}";;
       "16")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK16_BOOT_DIR}";;
-      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK17_BOOT_DIR}";;
+      "17")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK17_BOOT_DIR}";;
+      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK18_BOOT_DIR}";;
 esac
 
 
@@ -155,7 +174,7 @@ then
 fi
 
 echo "Boot jdk directory: ${JDK_BOOT_DIR}:"
-${JDK_BOOT_DIR}/bin/java -version 2>&1 | sed 's/^/BOOT JDK: /'
+"${JDK_BOOT_DIR}/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 java -version 2>&1 | sed 's/^/JDK IN PATH: /g'
 
 if [ "${RELEASE}" == "true" ]; then
@@ -169,11 +188,11 @@ else
 fi
 
 
-if [ ! -z "${TAG}" ]; then
+if [ -n "${TAG}" ]; then
   OPTIONS="${OPTIONS} --tag $TAG"
 fi
 
-if [ ! -z "${BRANCH}" ]
+if [ -n "${BRANCH}" ]
 then
   OPTIONS="${OPTIONS} --disable-shallow-git-clone -b ${BRANCH}"
 fi
@@ -181,7 +200,7 @@ fi
 echo "BRANCH: ${BRANCH} (For release either BRANCH or TAG should be set)"
 echo "TAG: ${TAG}"
 
-
+# shellcheck disable=SC2268
 if [ "x${FILENAME}" = "x" ] ; then
     echo "FILENAME must be set in the environment"
     exit 1
@@ -191,12 +210,10 @@ echo "Filename will be: $FILENAME"
 
 export BUILD_ARGS="${BUILD_ARGS} --use-jep319-certs"
 
-# Enable debug images for all platforms except AIX until upstream openjdk supports "external" native debug symbols
-if [ "${OPERATING_SYSTEM}" != "aix" ] ; then
-    export BUILD_ARGS="${BUILD_ARGS} --create-debug-image"
-fi
+# Enable debug images for all platforms
+export BUILD_ARGS="${BUILD_ARGS} --create-debug-image"
 
-echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
+echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-git-repo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args ${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"
 
 # Convert all speech marks in config args to make them safe to pass in.
 # These will be converted back into speech marks shortly before we use them, in build.sh.

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -77,37 +78,62 @@ fi
 
 if [ "${ARCHITECTURE}" == "arm" ]
 then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jobs=4 --with-memory-size=2000"
+  if lscpu | grep aarch64; then
+     echo Validating 32-bit environment on 64-bit host - perhaps it is a docker container ...
+     if ! file /bin/ls | grep "32-bit.*ARM"; then
+       echo /bin/ls is not a 32-bit binary but ARCHITECTURE=arm. Non-32-bit userland is invalid without extra work
+       exit 1
+     fi
+     echo Looks reasonable - configuring to allow building that way ...
+     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --target=armv7l-unknown-linux-gnueabihf --host=armv7l-unknown-linux-gnueabihf"
+  fi
+  # "4" is a temporary override which allows us to utilise all build
+  # cores on our scaleway systems while they are still in use but still
+  # allow more on larger machines. Can be revisited post-Scaleway
+  if [ "$(lscpu|awk '/^CPU\(s\)/{print$2}')" = "4" ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jobs=4 --with-memory-size=2000"
+  fi
   if [ "$JAVA_FEATURE_VERSION" -eq 8 ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-latomic"
   fi
   if [ "$JAVA_FEATURE_VERSION" -ge 11 ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
   fi
-  if [ ! -z "${NUM_PROCESSORS}" ]
+  if [ -n "${NUM_PROCESSORS}" ]
   then
     export BUILD_ARGS="${BUILD_ARGS} --processors $NUM_PROCESSORS"
   fi
+  echo "=== START OF ARM32 STATUS CHECK ==="
+  uptime
+  free
+  ps -fu jenkins
+  echo "=== END OF ARM32 STATUS CHECK ==="
 fi
 
-BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
-BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-  bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+  bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
   # instead of BOOT_JDK_VARIABLE (no '$').
-  export ${BOOT_JDK_VARIABLE}="$bootDir"
+  export "${BOOT_JDK_VARIABLE}"="$bootDir"
   if [ ! -x "$bootDir/bin/javac" ]; then
     # Set to a default location as linked in the ansible playbooks
-    if [ -x /usr/lib/jvm/jdk-${BOOT_JDK_VERSION}/bin/javac ]; then
-      echo Could not use ${BOOT_JDK_VARIABLE} - using /usr/lib/jvm/jdk-${BOOT_JDK_VERSION}
-      export ${BOOT_JDK_VARIABLE}="/usr/lib/jvm/jdk-${BOOT_JDK_VERSION}"
-    elif [ "$BOOT_JDK_VERSION" -ge 8 ]; then # Adopt has no build pre-8
+    if [ -x "/usr/lib/jvm/jdk-${JDK_BOOT_VERSION}/bin/javac" ]; then
+      echo "Could not use ${BOOT_JDK_VARIABLE} - using /usr/lib/jvm/jdk-${JDK_BOOT_VERSION}"
+      # shellcheck disable=SC2140
+      export "${BOOT_JDK_VARIABLE}"="/usr/lib/jvm/jdk-${JDK_BOOT_VERSION}"
+    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       mkdir -p "$bootDir"
       releaseType="ga"
-      apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/adoptopenjdk"
+      vendor="adoptium"
+      # TODO: Temporary change until https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/2145 is resolved
+      if [ "$JDK_BOOT_VERSION" -ge 15 ] && [ "$VARIANT" = "openj9" ] && [ "$ARCHITECTURE" = "aarch64" ]; then
+        apiUrlTemplate="https://api.\${vendor}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/hotspot/normal/\${vendor}"
+      else
+        apiUrlTemplate="https://api.\${vendor}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/\${vendor}"
+      fi
       apiURL=$(eval echo ${apiUrlTemplate})
-      echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+      echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
       # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
       # the fallback mechanism, as downloading of the GA binary might fail.
       set +e
@@ -117,17 +143,34 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       if [ $retVal -ne 0 ]; then
         # We must be a JDK HEAD build for which no boot JDK exists other than
         # nightlies?
-        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
+        echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} failed."
         # shellcheck disable=SC2034
         releaseType="ea"
+        # shellcheck disable=SC2034
+        vendor="adoptium"
         apiURL=$(eval echo ${apiUrlTemplate})
-        echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+        echo "Attempting to download EA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
+        set +e
         wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
+        retVal=$?
+        set -e
+        if [ $retVal -ne 0 ]; then
+          # If no binaries are available then try from adoptopenjdk
+          echo "Downloading Temurin release of boot JDK version ${JDK_BOOT_VERSION} failed."
+          # shellcheck disable=SC2034
+          releaseType="ga"
+          # shellcheck disable=SC2034
+          vendor="adoptopenjdk"
+          apiURL=$(eval echo ${apiUrlTemplate})
+          echo "Attempting to download GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
+          wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
+        fi
       fi
     fi
   fi
 fi
 
+# shellcheck disable=SC2155
 export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 "$JDK_BOOT_DIR/bin/java" -version >/dev/null 2>&1
@@ -151,34 +194,84 @@ elif [ -r /usr/bin/gcc-7 ]; then
   [ -r /usr/bin/g++-7 ] && export CXX=/usr/bin/g++-7
 fi
 
+if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
+  # BUILD_C/CXX required for native (non-cross) RISC-V builds of Bisheng
+  if [ -n "$CXX" ]; then
+    export BUILD_CC="$CC"
+    export BUILD_CXX="$CXX"
+  fi
+  # Bisheng on aarch64 has a KAE option which requires openssl 1.1.1 to be used
+  BISHENG_OPENSSL_111_LOCATION=${BISHENG_OPENSSL_111_LOCATION:-/usr/local/openssl-1.1.1}
+  if [ -x "${BISHENG_OPENSSL_111_LOCATION}/lib/libcrypto.so.1.1" ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cflags=-I${BISHENG_OPENSSL_111_LOCATION}/include  --with-extra-cxxflags=-I${BISHENG_OPENSSL_111_LOCATION}/include --with-extra-ldflags=-L${BISHENG_OPENSSL_111_LOCATION}/lib"
+  fi
+fi
+
 if which ccache 2> /dev/null; then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-ccache"
 fi
 
-if [ "${ARCHITECTURE}" == "riscv64" && "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
-  echo RISCV cross-compilation ... Downloading latest nightly OpenJ9/x64 as build JDK
-  export BUILDJDK=$WORKSPACE/buildjdk
-  rm -rf "$BUILDJDK"
-  mkdir "$BUILDJDK"
-  wget -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/x64/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
-  "$BUILDJDK/bin/java" -version 2>&1 | sed 's/^/CROSSBUILD JDK > /g'
-  export RISCV64=/opt/riscv_toolchain_linux
-  export LD_LIBRARY_PATH=$RISCV64/lib64
-  export PATH="$RISCV64/bin:$PATH"
-  # riscv has to use a cross compiler
-  export CC=$RISCV64/bin/riscv64-unknown-linux-gnu-gcc
-  export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
-  CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root --with-boot-jdk=$JDK_BOOT_DIR --with-build-jdk=$BUILDJDK"
-  BUILD_ARGS="${BUILD_ARGS} -F"
-elif [ "${ARCHITECTURE}" == "riscv64" && "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
-  echo Bisheng RISCV cross-compilation ... 
-  export RISCV64=/opt/riscv_toolchain_linux
-  export LD_LIBRARY_PATH=$RISCV64/lib64
-  export PATH="$RISCV64/bin:$PATH"
-  # riscv has to use a cross compiler
-  export CC=$RISCV64/bin/riscv64-unknown-linux-gnu-gcc
-  export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
-  CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root --with-boot-jdk=$JDK_BOOT_DIR"
-  BUILD_ARGS="${BUILD_ARGS} -F"
-fi
+# Handle cross compilation environment for RISC-V
+NATIVE_API_ARCH=$(uname -m)
+if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
+if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
+if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; then
+  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+    export BUILDJDK=${WORKSPACE:-$PWD}/buildjdk
+    echo "RISCV cross-compilation for OpenJ9 ... Downloading required nightly OpenJ9/${NATIVE_API_ARCH} as build JDK to $BUILDJDK"
+    rm -rf "$BUILDJDK"
+    mkdir "$BUILDJDK"
+    wget -q -O - "https://api.adoptium.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/${NATIVE_API_ARCH}/jdk/openj9/normal/adoptium" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
+    "$BUILDJDK/bin/java" -version 2>&1 | sed 's/^/CROSSBUILD JDK > /g' || exit 1
+    CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-jdk=$BUILDJDK --disable-ddr"
+    if [ -d /usr/local/openssl102 ]; then
+      CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/usr/local/openssl102"
+    fi
+  elif [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    if [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
+      BUILD_CC=/usr/local/gcc/bin/gcc-7.5
+      BUILD_CXX=/usr/local/gcc/bin/g++-7.5
+      BUILD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
+    fi
+    # Check if BUILD_CXX/BUILD_CC for Bisheng RISC-V exists
+    if [ ! -x "$BUILD_CXX" ]; then
+      echo "Bisheng RISC-V host compiler BUILD_CXX=$BUILD_CXX does not exist on this system - cannot continue"
+      exit 1
+    fi
+  fi
 
+  # RISC-V cross compile settings for all VARIANT values
+  echo RISC-V cross-compilation setup ...  Setting RISCV64, LD_LIBRARY_PATH, PATH, CC, CXX
+  export RISCV64=/opt/riscv_toolchain_linux
+  export LD_LIBRARY_PATH=$RISCV64/lib64
+  if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_LIBRARY_PATH
+  fi
+
+  if [ -r "$RISCV64/bin/riscv64-unknown-linux-gnu-g++" ]; then
+    export CC=$RISCV64/bin/riscv64-unknown-linux-gnu-gcc
+    export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
+    export PATH="$RISCV64/bin:$PATH"
+  elif [ -r /usr/bin/riscv64-linux-gnu-g++ ]; then
+    export CC=/usr/bin/riscv64-linux-gnu-gcc
+    export CXX=/usr/bin/riscv64-linux-gnu-g++
+    # This is required for OpenJ9 if not using "riscv64-unknown-linux-gnu-*"
+    # i.e. if using the default cross compiler supplied with Debian/Ubuntu
+    export RISCV_TOOLCHAIN_TYPE=install
+  fi
+  RISCV_SYSROOT=${RISCV_SYSROOT:-/opt/fedora28_riscv_root}
+  if [ ! -d "${RISCV_SYSROOT}" ]; then
+     echo "RISCV_SYSROOT=${RISCV_SYSROOT} is undefined or does not exist - cannot proceed"
+     exit 1
+  fi
+  CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=${RISCV_SYSROOT} -with-boot-jdk=$JDK_BOOT_DIR"
+
+  if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jvm-features=shenandoahgc BUILD_CC=$BUILD_CC BUILD_CXX=$BUILD_CXX"
+  fi
+  BUILD_ARGS="${BUILD_ARGS} --cross-compile -F"
+  if [ ! -x "$CXX" ]; then
+    echo "RISC-V cross compiler CXX=$CXX does not exist on this system - cannot continue"
+    exit 1
+  fi
+fi

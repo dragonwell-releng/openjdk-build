@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,19 +23,22 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
 
 if [ "${VARIANT}" != "${BUILD_VARIANT_DRAGONWELL}" ]; then
-BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+OOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
 BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+# We don't bundle freetype on alpine anymore, and expect the user to have it.
+export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-  bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+  bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
   # instead of BOOT_JDK_VARIABLE (no '$').
-  export ${BOOT_JDK_VARIABLE}="$bootDir"
+  export "${BOOT_JDK_VARIABLE}"="$bootDir"
   if [ ! -d "$bootDir/bin" ]; then
     mkdir -p "$bootDir"
     releaseType="ga"
-    apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/alpine-linux/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/adoptopenjdk"
+    apiUrlTemplate="https://api.adoptium.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/alpine-linux/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/adoptium"
     apiURL=$(eval echo ${apiUrlTemplate})
-    echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+    echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
     # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
     # the fallback mechanism, as downloading of the GA binary might fail.
     set +e
@@ -44,16 +48,17 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
     if [ $retVal -ne 0 ]; then
       # We must be a JDK HEAD build for which no boot JDK exists other than
       # nightlies?
-      echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
+      echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} failed."
       # shellcheck disable=SC2034
       releaseType="ea"
       apiURL=$(eval echo ${apiUrlTemplate})
-      echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+      echo "Attempting to download EA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
       wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
     fi
   fi
 fi
 
+# shellcheck disable=SC2155
 export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 "$JDK_BOOT_DIR/bin/java" -version > /dev/null 2>&1
