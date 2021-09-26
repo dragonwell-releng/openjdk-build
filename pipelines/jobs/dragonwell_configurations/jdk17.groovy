@@ -1,12 +1,15 @@
 targetConfigurations = [
         "x64Linux"    : [
-                "hotspot"
+                "dragonwell"
         ],
         "x64Windows"  : [
-                "hotspot"
+                "dragonwell"
         ],
         "aarch64Linux": [
-                "hotspot"
+                "dragonwell"
+        ],
+        "riscv64Linux": [
+                "dragonwell"
         ]
 ]
 
