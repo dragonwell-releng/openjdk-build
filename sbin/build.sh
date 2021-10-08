@@ -1129,6 +1129,11 @@ getFirstTagFromOpenJDKGitRepo() {
     TAG_SEARCH="aarch64-shenandoah-jdk8u*-b*"
   fi
 
+  echo "tag search ${TAG_SEARCH}"
+  echo "$(git tag --list)"
+  echo "$(git tag --list "${TAG_SEARCH}")"
+  echo "$(git tag --list "${TAG_SEARCH}" | "$get_tag_cmd")"
+
   # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon,
   # read OPENJDK_TAG value from that file.
   local openj9_openjdk_tag_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/openjdk-tag.gmk"
