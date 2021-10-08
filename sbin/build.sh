@@ -1130,9 +1130,9 @@ getFirstTagFromOpenJDKGitRepo() {
   fi
 
   echo "tag search ${TAG_SEARCH}"
-  echo "$(git tag --list)"
-  echo "$(git tag --list "${TAG_SEARCH}")"
-  echo "$(git tag --list "${TAG_SEARCH}" | "$get_tag_cmd")"
+  echo "FST $(git tag --list)"
+  echo "SEC $(git tag --list "${TAG_SEARCH}")"
+  echo "THR $(git tag --list "${TAG_SEARCH}" | "$get_tag_cmd")"
 
   # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon,
   # read OPENJDK_TAG value from that file.
