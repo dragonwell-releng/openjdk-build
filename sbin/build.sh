@@ -174,13 +174,9 @@ getOpenJdkVersion() {
         version="jdk-17.${minorNum}.${updateNum}.${dragonwellPatch}+${buildNum}"
       fi
     else
-      echo "not found version file!!!!!!!!"
       version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
-      echo "version 1 ${version}"
       version=$(echo "$version" | cut -d'_' -f 1 | cut -d '-' -f 2,3)
-      echo "version 2 ${version}"
       version="jdk-${version}"
-      echo "version 3 ${version}"
     fi
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
     local bishengVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
@@ -1129,11 +1125,6 @@ getFirstTagFromOpenJDKGitRepo() {
     TAG_SEARCH="aarch64-shenandoah-jdk8u*-b*"
   fi
 
-  echo "tag search ${TAG_SEARCH}"
-  echo "FST $(git tag --list)"
-  echo "SEC $(git tag --list "${TAG_SEARCH}")"
-  echo "THR $(git tag --list "${TAG_SEARCH}" | "$get_tag_cmd")"
-
   # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon,
   # read OPENJDK_TAG value from that file.
   local openj9_openjdk_tag_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/openjdk-tag.gmk"
@@ -1141,7 +1132,7 @@ getFirstTagFromOpenJDKGitRepo() {
     firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
   else
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    firstMatchingNameFromRepo=$(git tag --list "$TAG_SEARCH" | "$get_tag_cmd")
+    firstMatchingNameFromRepo=$(git tag --list "$TAG_SEARCH" | head -n 1)
   fi
 
   if [ -z "$firstMatchingNameFromRepo" ]; then
