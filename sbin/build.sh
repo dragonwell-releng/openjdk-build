@@ -176,6 +176,7 @@ getOpenJdkVersion() {
     else
       version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
       version=$(echo "$version" | cut -d'_' -f 1 | cut -d '-' -f 2,3)
+      version="jdk-${version}"
     fi
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
     local bishengVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
