@@ -564,6 +564,7 @@ executeTemplatedFile() {
   stepIntoTheWorkingDirectory
 
   echo "Currently at '${PWD}'"
+  echo "Currently env $(printenv)"
 
   # We need the exitcode from the configure-and-build.sh script
   set +eu
