@@ -244,7 +244,7 @@ fi
 if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "${JAVA_TO_BUILD}" == "jdk17" ]
 then
   echo "set dragonwell 17 boot dir"
-  export JDK_BOOT_DIR="//cygdrive/c/Jenkins/workspace/zulu17/"
+  export JDK_BOOT_DIR="/cygdrive/c/Jenkins/workspace/zulu17/"
 fi
 
 if [ "${ARCHITECTURE}" == "aarch64" ]; then
