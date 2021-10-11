@@ -241,7 +241,8 @@ then
 
   if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "${JAVA_TO_BUILD}" == "${JDK17_VERSION}" ]
   then
-    export JDK_BOOT_DIR="/cygdrive/c/openjdk/dragonwell-bootstrap/jdk-16.0.2+7"
+    echo "set dragonwell 17 boot dir"
+    export JDK_BOOT_DIR="//cygdrive/c/Jenkins/workspace/zulu17/"
   fi
 fi
 
