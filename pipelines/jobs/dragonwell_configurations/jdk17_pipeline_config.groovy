@@ -68,6 +68,10 @@ class Config17 {
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: 'win2012&&vs2017',
+                buildArgs : [
+                        hotspot : '--jvm-variant client,server',
+                        dragonwell : '--jdk-boot-dir  /cygdrive/c/Jenkins/workspace/zulu17/'
+                ],
                 test                : 'default'
         ],
 
