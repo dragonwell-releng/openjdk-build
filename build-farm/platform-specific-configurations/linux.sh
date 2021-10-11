@@ -216,9 +216,6 @@ NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
 if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
 
-if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "${ARCHITECTURE}" == "riscv64" ]; then
-  cp /usr/local/gcc9/bin/gcc-9.3 /opt/riscv_toolchain_linux/bin/cc
-fi
 
 if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
