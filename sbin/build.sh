@@ -326,7 +326,7 @@ configureVersionStringParameter() {
     fi
 
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
       addConfigureArgIfValueIsNotEmpty "--with-version-patch=" "${dragonwellPatch}"
     fi
   fi
