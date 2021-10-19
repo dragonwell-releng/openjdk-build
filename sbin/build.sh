@@ -168,7 +168,7 @@ getOpenJdkVersion() {
         version="jdk-11.${minorNum}.${updateNum}.${dragonwellPatch}+${buildNum}"
       else
         local minorNum="$(cut -d'.' -f 2 <${dragonwellVerFile})"
-        local updateNum="$(cut -d'.' -f 3 <${dragonwellVerFile}  | cut -d'+' -f 1))"
+        local updateNum="$(cut -d'.' -f 3 <${dragonwellVerFile})"
         local buildNum="$(cut -d'+' -f 2 <${dragonwellVerFile})"
         version="jdk-17.${minorNum}.${updateNum}+${buildNum}"
       fi
@@ -186,7 +186,7 @@ getOpenJdkVersion() {
         version="jdk8u${updateNum}-b${buildNum}"
       else
         local minorNum="$(cut -d'.' -f 2 <"${bishengVerFile}")"
-        local updateNum="$(cut -d'.' -f 3 <"${bishengVerFile}")"
+        local updateNum="$(awk -F"[.+]" '{print $3}' <"${bishengVerFile}")"
         local buildNum="$(cut -d'.' -f 5 <"${bishengVerFile}")"
         version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
       fi
