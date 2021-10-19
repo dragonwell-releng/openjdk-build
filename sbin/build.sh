@@ -164,11 +164,11 @@ getOpenJdkVersion() {
         local minorNum="$(cut -d'.' -f 2 <${dragonwellVerFile})"
         local updateNum="$(cut -d'.' -f 3 <${dragonwellVerFile})"
         local dragonwellPatch="$(cut -d'.' -f 4 <${dragonwellVerFile})"
-        local buildNum="$(cut -d'.' -f 5 <${dragonwellVerFile} | | cut -d'+' -f 1)"
+        local buildNum="$(cut -d'.' -f 5 <${dragonwellVerFile})"
         version="jdk-11.${minorNum}.${updateNum}.${dragonwellPatch}+${buildNum}"
       else
         local minorNum="$(cut -d'.' -f 2 <${dragonwellVerFile})"
-        local updateNum="$(cut -d'.' -f 3 <${dragonwellVerFile})"
+        local updateNum="$(cut -d'.' -f 3 <${dragonwellVerFile}  | cut -d'+' -f 1))"
         local buildNum="$(cut -d'+' -f 2 <${dragonwellVerFile})"
         version="jdk-17.${minorNum}.${updateNum}+${buildNum}"
       fi
