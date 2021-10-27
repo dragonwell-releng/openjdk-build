@@ -169,8 +169,10 @@ getOpenJdkVersion() {
       else
         local minorNum="$(cut -d'.' -f 2 <${dragonwellVerFile})"
         local updateNum="$(awk -F"[.+]" '{print $3}' <${dragonwellVerFile})"
+        local patch="$(awk -F"[.+]" '{print $4}'  <${dragonwellVerFile})"
+        local dragonwellPatch="$(awk -F"[.+]" '{print $5}'  -f 4 <${dragonwellVerFile})"
         local buildNum="$(cut -d'+' -f 2 <${dragonwellVerFile})"
-        version="jdk-17.${minorNum}.${updateNum}+${buildNum}"
+        version="jdk-17.${minorNum}.${updateNum}.${patch}.${dragonwellPatch}+${buildNum}"
       fi
     else
       version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
@@ -326,7 +328,7 @@ configureVersionStringParameter() {
     fi
 
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] ; then
       addConfigureArgIfValueIsNotEmpty "--with-version-patch=" "${dragonwellPatch}"
     fi
   fi
@@ -421,10 +423,10 @@ configureFreetypeLocation() {
 configureCommandParameters() {
   if [[ "$OSTYPE" == "cygwin" ]] && [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
     local makefile="make/autoconf/spec.gmk.in"
-    sed -i "s/JAVA =/&@FIXPATH@"
-    sed -i "s/JAVA_SMALL =/&@FIXPATH@"
-    sed -i "s/JAVADOC =/&@FIXPATH@"
-    sed -i "s/JAR =/&@FIXPATH@"
+sed -i "s/JAVA =/&@FIXPATH@/" "${makefile}"
+sed -i "s/JAVA_SMALL =/&@FIXPATH@/" "${makefile}"
+sed -i "s/JAVADOC =/&@FIXPATH@/" "${makefile}"
+sed -i "s/JAR =/&@FIXPATH@/" "${makefile}"
   fi
   configureVersionStringParameter
   configureBootJDKConfigureParameter
