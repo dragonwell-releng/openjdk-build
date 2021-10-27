@@ -422,7 +422,7 @@ configureFreetypeLocation() {
 # Configure the command parameters
 configureCommandParameters() {
   if [[ "$OSTYPE" == "cygwin" ]] && [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
-    local makefile="make/autoconf/spec.gmk.in"
+    local makefile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/make/autoconf/spec.gmk.in"
 sed -i "s/JAVA =/&@FIXPATH@/" "${makefile}"
 sed -i "s/JAVA_SMALL =/&@FIXPATH@/" "${makefile}"
 sed -i "s/JAVADOC =/&@FIXPATH@/" "${makefile}"
