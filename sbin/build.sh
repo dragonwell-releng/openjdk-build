@@ -421,7 +421,7 @@ configureFreetypeLocation() {
 
 # Configure the command parameters
 configureCommandParameters() {
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK17_CORE_VERSION}" ]]; then
     local makefile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/make/autoconf/spec.gmk.in"
     sed -i "s/JAVA =/&@FIXPATH@/" "${makefile}"
     sed -i "s/JAVAC =/&@FIXPATH@/" "${makefile}"
