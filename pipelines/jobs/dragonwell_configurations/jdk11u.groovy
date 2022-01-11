@@ -1,6 +1,7 @@
 targetConfigurations = [
         "x64Linux"    : [
-                "dragonwell"
+                "dragonwell",
+                "fast_startup"
         ],
         "x64Windows"  : [
                 "dragonwell"
