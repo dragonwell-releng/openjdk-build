@@ -367,7 +367,8 @@ configureVersionStringParameter() {
       derivedOpenJdkMetadataVersion="${derivedOpenJdkMetadataVersion}-${dateSuffix}"
     fi
     local versionOpt=$(getDragonwellVersionOPT)
-    addConfigureArg "--with-vendor-version-string=" "${BUILD_CONFIG[VENDOR_VERSION]:-"Temurin"}-${derivedOpenJdkMetadataVersion}-${versionOpt}"
+#    addConfigureArg "--with-vendor-version-string=" "${BUILD_CONFIG[VENDOR_VERSION]:-"Temurin"}-${derivedOpenJdkMetadataVersion}-${versionOpt}"
+    addConfigureArg "--with-vendor-version-string=" "${BUILD_CONFIG[VENDOR_VERSION]:-"Temurin"}-${derivedOpenJdkMetadataVersion}"
   fi
 
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
