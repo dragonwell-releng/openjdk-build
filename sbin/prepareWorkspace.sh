@@ -279,11 +279,11 @@ updateDragonwellSources() {
     else
       target_scm="${BUILD_CONFIG[BRANCH]}"
     fi
-    if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
-      bash get_source_dragonwell.sh --site github --branch "${target_scm}"
-    else
-      bash get_source_dragonwell.sh --site github --branch "${target_scm}" -r
-    fi
+#    if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
+#      bash get_source_dragonwell.sh --site github --branch "${target_scm}"
+#    else
+#      bash get_source_dragonwell.sh --site github --branch "${target_scm}" -r
+#    fi
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
