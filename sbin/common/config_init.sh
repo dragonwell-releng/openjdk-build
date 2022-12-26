@@ -38,6 +38,7 @@ OPENJDK_BUILD_REPO_BRANCH
 OPENJDK_BUILD_REPO_URI
 BRANCH
 BUILD_FULL_NAME
+BUILD_REPRODUCIBLE_DATE
 BUILD_VARIANT
 CERTIFICATE
 CLEAN_DOCKER_BUILD
@@ -48,6 +49,8 @@ COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
 CREATE_DEBUG_IMAGE
+CREATE_JRE_IMAGE
+CREATE_SBOM
 CREATE_SOURCE_ARCHIVE
 CUSTOM_CACERTS
 CROSSCOMPILE
@@ -152,6 +155,16 @@ function writeConfigToFile() {
   displayParams | sed 's/\r$//' > ./workspace/config/built_config.cfg
 }
 
+function createConfigToJsonString() {
+  jsonString="{ "
+  for K in "${!BUILD_CONFIG[@]}";
+  do
+    jsonString+="\"${PARAM_LOOKUP[$K]}\" : \"${BUILD_CONFIG[$K]}\", "
+  done
+  jsonString+=" \"Data Source\" : \"BUILD_CONFIG hashmap\"}"
+  echo "${jsonString}"
+}
+
 function loadConfigFromFile() {
   if [ -f "$SCRIPT_DIR/../config/built_config.cfg" ]
   then
@@ -200,6 +213,9 @@ function parseConfigurationArguments() {
         "--build-variant" )
         BUILD_CONFIG[BUILD_VARIANT]="$1"; shift;;
 
+        "--build-reproducible-date" )
+        BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]="$1"; shift;;
+
         "--branch" | "-b" )
         BUILD_CONFIG[BRANCH]="$1"; shift;;
 
@@ -235,6 +251,12 @@ function parseConfigurationArguments() {
 
         "--create-debug-image" )
         BUILD_CONFIG[CREATE_DEBUG_IMAGE]="true";;
+
+        "--create-jre-image" )
+        BUILD_CONFIG[CREATE_JRE_IMAGE]=true;;
+
+        "--create-sbom" )
+        BUILD_CONFIG[CREATE_SBOM]=true;;
 
         "--create-source-archive" )
         BUILD_CONFIG[CREATE_SOURCE_ARCHIVE]=true;;
@@ -347,11 +369,15 @@ function parseConfigurationArguments() {
 
 function setBranch() {
 
-  # Which repo branch to build, e.g. dev by default for hotspot, "openj9" for openj9
-  local branch="dev"
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+  # Which repo branch to build, e.g. dev by default for temurin, "openj9" for openj9
+  local branch="master"
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]; then
+    branch="dev"
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     branch="openj9";
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+    branch="master";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_FAST_STARTUP}" ]; then
     branch="master";
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
     branch="develop";
@@ -377,21 +403,16 @@ function configDefaults() {
   # Determine OS full system version
   local unameSys=$(uname -s)
   local unameOSSysVer=$(uname -sr)
+  local unameKernel=$(uname -r)
   if [ "${unameSys}" == "Linux" ]; then
-    # Linux distribs add more useful distrib in the single line file /etc/system-release,
-    # or property file /etc/os-release
-    if [ -f "/etc/system-release" ]; then
+    if [ -f "/etc/os-release" ]; then
+      local unameFullOSVer=$(awk -F= '/^NAME=/{OS=$2}/^VERSION_ID=/{VER=$2}END{print OS " " VER}' /etc/os-release  | tr -d '"')
+      unameOSSysVer="${unameFullOSVer} (Kernel: ${unameKernel})"
+    elif [ -f "/etc/system-release" ]; then
       local linuxName=$(tr -d '"' < /etc/system-release)
-      unameOSSysVer="${unameOSSysVer} : ${linuxName}"
-    elif [ -f "/etc/os-release" ]; then
-      if grep "^NAME=" /etc/os-release; then
-        local osName=$(grep "^NAME=" /etc/os-release | cut -d= -f2 | tr -d '"')
-        unameOSSysVer="${unameOSSysVer} : ${osName}"
-      fi
-      if grep "^VERSION=" /etc/os-release; then
-        local osVersion=$(grep "^VERSION=" /etc/os-release | cut -d= -f2 | tr -d '"')
-        unameOSSysVer="${unameOSSysVer} ${osVersion}"
-      fi
+      unameOSSysVer="${unameOSSysVer} : ${linuxName} (Kernel: ${unameKernel} )"
+    else
+      unameOSSysVer="${unameSys} : unameOSSysVer (Kernel: ${unameKernel} )"
     fi
   elif [ "${unameSys}" == "AIX" ]; then
     # AIX provides full version info using oslevel
@@ -451,8 +472,17 @@ function configDefaults() {
       ;;
   esac
 
+  # Default to no supplied reproducible build date, uses current date
+  BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]=""
+
   # The default behavior of whether we want to create a separate debug symbols archive
   BUILD_CONFIG[CREATE_DEBUG_IMAGE]="false"
+
+  # The default behavior of whether we want to create the legacy JRE
+  BUILD_CONFIG[CREATE_JRE_IMAGE]="false"
+
+  # Set default value to "false". We config buildArg per each config file to have it enabled by our pipeline
+  BUILD_CONFIG[CREATE_SBOM]="false"
 
   # The default behavior of whether we want to create a separate source archive
   BUILD_CONFIG[CREATE_SOURCE_ARCHIVE]="false"
@@ -553,13 +583,13 @@ function configDefaults() {
 
   BUILD_CONFIG[CROSSCOMPILE]=false
 
-  # By default assume we have adopt patches applied to the repo
+  # By default assume we have Adoptium patches applied to the repo
   BUILD_CONFIG[ADOPT_PATCHES]=true
 
   BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=false
 
   # Used in 'release' file for jdk8u
-  BUILD_CONFIG[VENDOR]=${BUILD_CONFIG[VENDOR]:-"Eclipse Adoptium"}
+  BUILD_CONFIG[VENDOR]=${BUILD_CONFIG[VENDOR]:-"Undefined Vendor"}
 }
 
 # Declare the map of build configuration that we're going to use

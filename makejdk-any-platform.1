@@ -5,7 +5,7 @@ makejdk-any-platform.sh
 .SH SYNOPSIS
 "./makejdk-any-platform.sh [options] version"
 .SH DESCRIPTION
-This script is the entry point for building (Adopt) OpenJDK binaries. Building
+This script is the entry point for building (Adoptium) OpenJDK binaries. Building
 natively or in a docker container are both supported. This script (and its
 supporting scripts) have defaults, but you can override these as needed.
 
@@ -69,6 +69,12 @@ specify any custom user configuration arguments.
 .TP
 .BR \-\-clean-git-repo
 clean out any 'bad' local git repo you already have.
+.TP
+.BR \-\-create-jre-image
+create the legacy JRE image in addition to the JDK image.
+.TP
+.BR \-\-create-sbom
+create the CycloneDX System Bill of Materials (JSON artifact).
 .TP
 .BR \-\-create-source-archive
 create an archive of the sources which got used to build OpenJDK

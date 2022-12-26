@@ -17,7 +17,7 @@
 
 ################################################################################
 #
-# This script prepares the workspace to build (Adopt) OpenJDK.
+# This script prepares the workspace to build (Adoptium) OpenJDK.
 # See the configureWorkspace function for details
 # It is sourced by build.sh
 #
@@ -101,8 +101,8 @@ checkoutAndCloneOpenJDKGitRepo() {
     fi
   fi
 
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 11 ]]; then
-    # Verify Adopt patches tag is being built, otherwise we may be accidently just building "raw" OpenJDK
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]]; then
+    # Verify Adoptium patches tag is being built, otherwise we may be accidently just building "raw" OpenJDK
     if [ ! -f "${TEMURIN_MARKER_FILE}" ] && [ "${BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]}" == "false" ]; then
       echo "${TEMURIN_MARKER_FILE} marker file not found in fetched source to be built, this may mean the wrong SCMReference build parameter has been specified. Ensure the correct Temurin patch release tag is specified, eg.for build jdk-11.0.4+10, it would be jdk-11.0.4+10_adopt"
       exit 1
@@ -112,7 +112,6 @@ checkoutAndCloneOpenJDKGitRepo() {
   git clean -ffdx
 
   updateOpenj9Sources
-  updateDragonwellSources
 
   createSourceTagFile
 
@@ -206,7 +205,7 @@ checkoutRequiredCodeToBuild() {
         # Tag will be something similar to jdk-11.0.8+8_adopt-160-g824f8474f5
         # jdk-11.0.8+8_adopt = TAGNAME
         # 160 = NUMBER OF COMMITS ON TOP OF THE ORIGINAL TAGGED OBJECT
-        # g824f8474f5 = THE SHORT HASH OF THE MOST RECENT COMMIT
+        # g824f8474f5 = "g" + THE SHORT HASH OF THE MOST RECENT COMMIT
         echo "SUCCESS: TAG FOUND! Exporting to $scmrefPath..."
         git describe > "$scmrefPath"
 
@@ -556,10 +555,15 @@ checkingAndDownloadingFreeType() {
 prepareMozillaCacerts() {
     echo "Generating cacerts from Mozilla's bundle"
     cd "$SCRIPT_DIR/../security"
-    time ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
+    if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge "17" ]]; then
+      # jdk-17+ build uses JDK make tool GenerateCacerts to load keystore for reproducible builds
+      time ./mk-cacerts.sh --nokeystore
+    else
+      time ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
+    fi
 }
 
-# Download all of the dependencies for OpenJDK (Alsa, FreeType, etc.)
+# Download all of the dependencies for OpenJDK (Alsa, FreeType, FreeMarker etc.)
 downloadingRequiredDependencies() {
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
@@ -588,14 +592,19 @@ downloadingRequiredDependencies() {
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
-    if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
-      echo "Checking and download FreeType Font dependency"
-      checkingAndDownloadingFreeType
-    else
-      echo ""
-      echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
-      echo ""
-    fi
+    case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
+      jdk8* | jdk9* | jdk10*)
+        if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
+          echo "Checking and download FreeType Font dependency"
+          checkingAndDownloadingFreeType
+        else
+          echo ""
+          echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
+          echo ""
+        fi
+      ;;
+      *) echo "Using bundled Freetype" ;;
+    esac
   else
     echo "Skipping Freetype"
   fi

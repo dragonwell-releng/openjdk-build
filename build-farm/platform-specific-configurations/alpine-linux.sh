@@ -19,6 +19,12 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
+# Solves issues seen on 4GB HC4 systems with two large ld processes
+if [ "$(awk '/^MemTotal:/{print$2}' < /proc/meminfo)" -lt "5000000" ]
+then
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-Wl,--no-keep-memory"
+fi
+
 # ccache seems flaky on alpine
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
 
@@ -36,7 +42,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   if [ ! -d "$bootDir/bin" ]; then
     mkdir -p "$bootDir"
     releaseType="ga"
-    apiUrlTemplate="https://api.adoptium.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/alpine-linux/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/adoptium"
+    apiUrlTemplate="https://api.adoptium.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/alpine-linux/\${ARCHITECTURE}/jdk/hotspot/normal/eclipse"
     apiURL=$(eval echo ${apiUrlTemplate})
     echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
     # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
