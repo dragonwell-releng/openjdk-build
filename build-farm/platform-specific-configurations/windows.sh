@@ -123,7 +123,7 @@ then
       # https://github.com/adoptium/temurin-build/issues/243
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="/c/cygwin64/bin:/usr/bin:$PATH"
-      TOOLCHAIN_VERSION="2017"
+      TOOLCHAIN_VERSION="2013"
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
@@ -166,7 +166,7 @@ then
       export PATH="$PATH:/c/cygwin64/bin"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
       export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
-      TOOLCHAIN_VERSION="2017"
+      TOOLCHAIN_VERSION="2013"
     elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
     then
       TOOLCHAIN_VERSION="2013"
@@ -220,6 +220,7 @@ then
     if [[ -d "${DRAGONWELL8_BOOTSTRAP}" ]]; then
       export JDK_BOOT_DIR="${DRAGONWELL8_BOOTSTRAP}"
     fi
+    TOOLCHAIN_VERSION="2013"
   fi
 
 fi
