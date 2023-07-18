@@ -219,7 +219,7 @@ processArgumentsforSpecificArchitectures() {
 
     # This is to ensure consistency with the defaults defined in setMakeArgs()
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-      make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true images"
+      make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true images --trace"
     # Don't produce a JRE
     elif [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "false" ]; then
       make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true product-images"
@@ -326,7 +326,7 @@ function setMakeArgs() {
       BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=""
     fi
   else
-    BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images"}
+    BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images --trace"}
   fi
 }
 
