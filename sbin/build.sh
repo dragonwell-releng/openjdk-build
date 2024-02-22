@@ -47,6 +47,7 @@ source "$SCRIPT_DIR/common/common.sh"
 source "$SCRIPT_DIR/common/sbom.sh"
 
 export LIB_DIR=$(crossPlatformRealPath "${SCRIPT_DIR}/../pipelines/")
+export JEMALLOC_PATH=/usr/lib/jemalloc-4.5.0/$(arch)
 export CYCLONEDB_DIR="${SCRIPT_DIR}/../cyclonedx-lib"
 
 export jreTargetPath
@@ -982,6 +983,10 @@ parseJavaVersionString() {
   echo "$version"
 }
 
+assembleDependencyLibs() {
+  cp -f /usr/lib/jemalloc-4.5.0/$(arch)/lib/libjemalloc.so.2 "$1/lib"
+}
+
 # Print the version string so we know what we've produced
 printJavaVersionString() {
   stepIntoTheWorkingDirectory
@@ -996,6 +1001,7 @@ printJavaVersionString() {
     PRODUCT_HOME=$(ls -d ${PWD}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
     ;;
   esac
+  assembleDependencyLibs "${PRODUCT_HOME}"
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "'$PRODUCT_HOME' found"
      if [ ! -r "$PRODUCT_HOME/bin/java" ]; then
