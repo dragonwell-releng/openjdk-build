@@ -47,47 +47,47 @@
 
         <target name="download-cyclonedx" unless="cyclonedx_available">
                 <echo message="Downloading cyclonedx-core-java version ${cyclonedx-core-java-version}"/>
-                <download-file destdir="build/jar" destfile="cyclonedx-core-java.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=org/cyclonedx/cyclonedx-core-java/${cyclonedx-core-java-version}/cyclonedx-core-java-${cyclonedx-core-java-version}.jar"/>
+		<download-file destdir="build/jar" destfile="cyclonedx-core-java.jar" srcurl="https://repo1.maven.org/maven2/org/cyclonedx/cyclonedx-core-java/${cyclonedx-core-java-version}/cyclonedx-core-java-${cyclonedx-core-java-version}.jar"/>
 	</target>
 
         <target name="download-jackson-core" unless="jackson-core_available">
                 <echo message="Downloading jackson-core version ${jackson-core-version}"/>
-                <download-file destdir="build/jar" destfile="jackson-core.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-core-version}/jackson-core-${jackson-core-version}.jar"/>
+		<download-file destdir="build/jar" destfile="jackson-core.jar" srcurl="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/${jackson-core-version}/jackson-core-${jackson-core-version}.jar"/>
         </target>
 
         <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
                 <echo message="Downloading jackson-dataformat-xml version ${jackson-databind-version}"/>
-                <download-file destdir="build/jar" destfile="jackson-dataformat-xml.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/dataformat/jackson-dataformat-xml/${jackson-databind-version}/jackson-dataformat-xml-${jackson-databind-version}.jar"/>
+                <download-file destdir="build/jar" destfile="jackson-dataformat-xml.jar" srcurl="https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-xml/${jackson-databind-version}/jackson-dataformat-xml-${jackson-databind-version}.jar"/>
         </target>
 
         <target name="download-jackson-databind" unless="jackson-databind_available">
                 <echo message="Downloading jackson-databind version ${jackson-databind-version}"/>
-                <download-file destdir="build/jar" destfile="jackson-databind.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/${jackson-databind-version}/jackson-databind-${jackson-databind-version}.jar"/>
+                <download-file destdir="build/jar" destfile="jackson-databind.jar" srcurl="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/${jackson-databind-version}/jackson-databind-${jackson-databind-version}.jar"/>
         </target>
 
         <target name="download-jackson-annotations" unless="jackson-annotations_available">
                 <echo message="Downloading jackson-annotations version ${jackson-annotations-version}"/>
-                <download-file destdir="build/jar" destfile="jackson-annotations.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-annotations/${jackson-annotations-version}/jackson-annotations-${jackson-annotations-version}.jar"/>
+                <download-file destdir="build/jar" destfile="jackson-annotations.jar" srcurl="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/${jackson-annotations-version}/jackson-annotations-${jackson-annotations-version}.jar"/>
         </target>
 
         <target name="download-json-schema" unless="json-schema_available">
                 <echo message="Downloading json-schema version ${json-schema-version}"/>
-                <download-file destdir="build/jar" destfile="json-schema.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/networknt/json-schema-validator/${json-schema-version}/json-schema-validator-${json-schema-version}.jar"/>
+                <download-file destdir="build/jar" destfile="json-schema.jar" srcurl="https://repo1.maven.org/maven2/com/networknt/json-schema-validator/${json-schema-version}/json-schema-validator-${json-schema-version}.jar"/>
         </target>
 
         <target name="download-commons-codec" unless="commons-codec_available">
                 <echo message="Downloading commons-codec version ${commons-codec-version}"/>
-                <download-file destdir="build/jar" destfile="commons-codec.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=commons-codec/commons-codec/${commons-codec-version}/commons-codec-${commons-codec-version}.jar"/>
+                <download-file destdir="build/jar" destfile="commons-codec.jar" srcurl="https://repo1.maven.org/maven2/commons-codec/commons-codec/${commons-codec-version}/commons-codec-${commons-codec-version}.jar"/>
         </target>
 
         <target name="download-commons-io" unless="commons-io_available">
                 <echo message="Downloading commons-io version ${commons-io-version}"/>
-                <download-file destdir="build/jar" destfile="commons-io.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=commons-io/commons-io/${commons-io-version}/commons-io-${commons-io-version}.jar"/>
+                <download-file destdir="build/jar" destfile="commons-io.jar" srcurl="https://repo1.maven.org/maven2/commons-io/commons-io/${commons-io-version}/commons-io-${commons-io-version}.jar"/>
         </target>
 
         <target name="download-github-package-url" unless="github-package-url_available">
                 <echo message="Downloading github-package-url version ${github-package-url-version}"/>
-                <download-file destdir="build/jar" destfile="github-package-url.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
+                <download-file destdir="build/jar" destfile="github-package-url.jar" srcurl="https://repo1.maven.org/maven2/com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
         </target>
 
         <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar">
