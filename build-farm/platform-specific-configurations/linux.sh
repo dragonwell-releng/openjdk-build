@@ -211,6 +211,22 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION
   export CXX=/usr/local/gcc9/bin/g++-9.3
   # Enable GCC 10 for Java 17+ for repeatable builds, but not for our supported releases
   # Ref https://github.com/adoptium/temurin-build/issues/2787
+elif [ "$JAVA_FEATURE_VERSION" -ge 25 ]; then
+  if [ "$(arch)" = "x86_64" ]; then
+    wget -q https://github.com/adoptium/devkit-binaries/releases/download/gcc-14.2.0-Centos7.9.2009-b00/devkit-gcc-14.2.0-Centos7.9.2009-b00-x86_64-linux-gnu.tar.xz -O devkit-gcc.tar.xz
+    mkdir -p /usr/local/gcc14
+    tar xf devkit-gcc.tar.xz -C /usr/local/gcc14/
+    rm -rf devkit-gcc.tar.xz
+    export  CC=/usr/local/gcc14/bin/gcc-14.2.0
+    export CXX=/usr/local/gcc14/bin/g++-14.2.0
+    export PATH=/usr/local/gcc14/bin:$PATH
+    export LD_LIBRARY_PATH=/usr/local/gcc14/lib64:/usr/local/gcc14/lib
+  elif [ "$(arch)" = "aarch64" ]; then
+    export PATH=/usr/local/gcc11/bin:$PATH
+    [ -r /usr/local/gcc11/bin/gcc-11.2 ] && export  CC=/usr/local/gcc11/bin/gcc-11.2
+    [ -r /usr/local/gcc11/bin/g++-11.2 ] && export CXX=/usr/local/gcc11/bin/g++-11.2
+    export LD_LIBRARY_PATH=/usr/local/gcc11/lib64:/usr/local/gcc11/lib
+  fi
 elif [ "$JAVA_FEATURE_VERSION" -ge 19 ] && [ -r /usr/local/gcc11/bin/gcc-11.2 ]; then
   export PATH=/usr/local/gcc11/bin:$PATH
   [ -r /usr/local/gcc11/bin/gcc-11.2 ] && export  CC=/usr/local/gcc11/bin/gcc-11.2
