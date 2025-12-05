@@ -38,6 +38,121 @@ FREEMARKER_LIB_CHECKSUM=${FREEMARKER_LIB_CHECKSUM:-8723ec9ffe006e8d376b6c7dbe795
 FREETYPE_LIB_CHECKSUM=${FREETYPE_LIB_CHECKSUM:-ec391504e55498adceb30baceebd147a6e963f636eb617424bcfc47a169898ce}
 
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
+
+# sha256 of https://github.com/adoptium/devkit-binaries/releases/tag/vs2022_redist_14.40.33807_10.0.26100.1742
+WINDOWS_REDIST_CHECKSUM="ac6060f5f8a952f59faef20e53d124c2c267264109f3f6fabeb2b7aefb3e3c62"
+
+
+checkBundledFreetypeJdkConfig() {
+  if [ "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" = "bundled" ] ; then
+    if [ "${BUILD_CONFIG[FREETYPE]}" = "false" ] ; then
+      echo "--freetype-dir 'bundled' is in contradiction with -skip-freetype"
+      exit 1
+    fi
+    echo "--freetype-dir is set to 'bundled' which is unusual, but accepted. It should be default."
+  elif [ "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" = "system" ] ; then
+   echo "--freetype-dir is set to 'system' which is unusual, but accepted. Use --skip-freetype instead."
+  elif [ -n "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ] ; then
+    echo "--freetype-dir is not accepted for JDK with bundled freetype."
+    exit 1
+  fi
+}
+
+checkNoBundledFreetypeJdkConfig() {
+  if [ "${BUILD_CONFIG[FREETYPE]}" = "false" ] && [ -n "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ] ; then
+    echo "--freetype-dir is declared together with --skip-freetype, that is invalid, as JDK would build against system freetype anyway."
+    exit 1
+  fi
+}
+
+isFreeTypeInSources() {
+  local libfreetypeid="libfreetype/src"
+  local location="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  if [ ! -e "$location" ] ; then
+    echo "No jdk sources exists to to determine $libfreetypeid presence"
+    exit 1
+  fi
+  local found=0
+  find "$location" | grep  -q "$libfreetypeid" || found=$?
+  if [ $found -eq 0 ] ; then
+    echo "$libfreetypeid found in $location"
+    checkBundledFreetypeJdkConfig
+  else
+    echo "$libfreetypeid not found in $location"
+    checkNoBundledFreetypeJdkConfig
+  fi
+  return $found
+}
+
+copyFromDir() {
+  echo "Copying OpenJDK source from  ${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
+  # We really do not want to use .git for dirs, as we expect user have them set up, ignoring them
+  local files=$(find "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}" -maxdepth 1 -mindepth 1 | grep -v -e "/workspace$" -e "/build$" -e "/.git" -e -"/build/")
+  # SC2086 (info): Double quote to prevent globbing and word splitting.
+  # globbing is intentional here
+  # shellcheck disable=SC2086
+  cp -rf $files "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/"
+}
+
+# this is workarounding --strip-components 1 missing on gnu tar
+# it requires  absolute tar-filepath as it changes dir and is hardcoded to one
+# similar approach can be used also for zip in future
+# warning! this method do not merge if (parts of!) destination exists.
+unpackGnuAbsPathWithStrip1Component() {
+  local tmp=$(mktemp -d)
+  pushd "$tmp" > /dev/null
+    "$@"
+  popd  > /dev/null
+  mv "$tmp"/*/* .
+  mv "$tmp"/*/.* . || echo "no hidden files in tarball"
+  rmdir "$tmp"/*
+  rmdir "$tmp"
+}
+
+untarGnuAbsPathWithStrip1Component() {
+  unpackGnuAbsPathWithStrip1Component tar -xf "$@"
+}
+
+unzipGnuAbsPathWithStrip1Component() {
+  unpackGnuAbsPathWithStrip1Component unzip "$@"
+}
+
+unpackFromArchive() {
+  echo "Extracting OpenJDK source tarball ${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to build the binary"
+  # If the tarball contains .git files, they should be ignored later
+  pushd "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    if [ "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]: -4}" == ".zip" ] ; then
+        echo "Source zip unpacked as if it contains exactly one directory"
+        unzipGnuAbsPathWithStrip1Component "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
+    else
+      local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}" | grep "/$" -c) || local topLevelItems=1
+      if [ "$topLevelItems" -eq "1" ] ; then
+        echo "Source tarball contains exactly one directory"
+        untarGnuAbsPathWithStrip1Component "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
+      else
+        echo "Source tarball does not contain a top level directory"
+        tar -xf "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
+      fi
+    fi
+    rm -rf "build"
+  popd
+}
+
+copyFromDirOrUnpackFromArchive() {
+  echo "Cleaning the copy of OpenJDK source repository from $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} and replacing with a fresh copy in 10 seconds..."
+  verboseSleep	 10
+  rm -rf "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  mkdir  "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  # Note that we are not persisting the build directory
+  if [ -d "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}" ] ; then
+    copyFromDir
+  elif [ -f "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}" ] ; then
+    unpackFromArchive
+  else
+    echo "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} is not a directory or a file "
+    exit 1
+  fi
+}
 FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.31}
 
 # Create a new clone or update the existing clone of the OpenJDK source repo
@@ -565,6 +680,8 @@ prepareMozillaCacerts() {
 
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, FreeMarker etc.)
 downloadingRequiredDependencies() {
+  local freeTypeInSources=0
+  isFreeTypeInSources || freeTypeInSources="$?"
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
 
@@ -592,19 +709,18 @@ downloadingRequiredDependencies() {
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
-    case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
-      jdk8* | jdk9* | jdk10*)
-        if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
-          echo "Checking and download FreeType Font dependency"
-          checkingAndDownloadingFreeType
-        else
-          echo ""
-          echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
-          echo ""
-        fi
-      ;;
-      *) echo "Using bundled Freetype" ;;
-    esac
+    if [ "0${freeTypeInSources}" -ne 0 ]  ; then
+      if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
+        echo "Checking and downloading FreeType Font dependency"
+        checkingAndDownloadingFreeType
+      else
+        echo ""
+        echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version is provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
+        echo ""
+      fi
+    else
+      echo "Using bundled Freetype"
+    fi
   else
     echo "Skipping Freetype"
   fi
@@ -689,9 +805,9 @@ createSourceTagFile(){
 function configureWorkspace() {
   if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" != "true" ]]; then
     createWorkspace
+    checkoutAndCloneOpenJDKGitRepo
     downloadingRequiredDependencies
     relocateToTmpIfNeeded
-    checkoutAndCloneOpenJDKGitRepo
     applyPatches
     if [ "${BUILD_CONFIG[CUSTOM_CACERTS]}" = "true" ] ; then
       prepareMozillaCacerts
