@@ -232,7 +232,7 @@ then
     if [[ -d "${DRAGONWELL8_BOOTSTRAP}" ]]; then
       export JDK_BOOT_DIR="${DRAGONWELL8_BOOTSTRAP}"
     fi
-    TOOLCHAIN_VERSION="2013"
+    TOOLCHAIN_VERSION="2017"
   fi
 
   if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
