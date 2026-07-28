@@ -212,18 +212,44 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION
   # Enable GCC 10 for Java 17+ for repeatable builds, but not for our supported releases
   # Ref https://github.com/adoptium/temurin-build/issues/2787
 elif [ "$JAVA_FEATURE_VERSION" -ge 25 ] && [ "${ARCHITECTURE}" != "riscv64" ]; then
+  devkitRelease=""
+  devkitTarget=""
   if [ "$(arch)" = "x86_64" ]; then
-    wget -q https://github.com/adoptium/devkit-binaries/releases/download/gcc-14.2.0-Centos7.9.2009-b01/devkit-gcc-14.2.0-Centos7.9.2009-b01-x86_64-linux-gnu.tar.xz -O devkit-gcc.tar.xz
-    mkdir -p /usr/local/gcc14
-    tar xf devkit-gcc.tar.xz -C /usr/local/gcc14/
-    rm -rf devkit-gcc.tar.xz
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-devkit=/usr/local/gcc14"
+    devkitRelease="gcc-14.2.0-Centos7.9.2009-b01"
+    devkitTarget="x86_64-linux-gnu"
   elif [ "$(arch)" = "aarch64" ]; then
-    wget -q https://github.com/adoptium/devkit-binaries/releases/download/gcc-14.2.0-Centos7.6.1810-b01/devkit-gcc-14.2.0-Centos7.6.1810-b01-aarch64-linux-gnu.tar.xz -O devkit-gcc.tar.xz
-    mkdir -p /usr/local/gcc14
-    tar xf devkit-gcc.tar.xz -C /usr/local/gcc14/
-    rm -rf devkit-gcc.tar.xz
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-devkit=/usr/local/gcc14"
+    devkitRelease="gcc-14.2.0-Centos7.6.1810-b01"
+    devkitTarget="aarch64-linux-gnu"
+  fi
+
+  if [ -n "${devkitRelease:-}" ]; then
+    devkitDir="/usr/local/devkit/${devkitRelease}"
+    devkitInfo="${devkitDir}/devkit.info"
+
+    if [ -f "${devkitInfo}" ] \
+        && grep -qx "ADOPTIUM_DEVKIT_RELEASE=${devkitRelease}" "${devkitInfo}" \
+        && grep -qx "ADOPTIUM_DEVKIT_TARGET=${devkitTarget}" "${devkitInfo}"; then
+      echo "Using matching DevKit from location ${devkitDir}"
+    else
+      devkitDir="${WORKSPACE:-$PWD}/devkit/${devkitRelease}"
+      devkitInfo="${devkitDir}/devkit.info"
+      devkitArchive="${devkitDir}/devkit.tar.xz"
+      devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${devkitRelease}/devkit-${devkitRelease}-${devkitTarget}.tar.xz"
+
+      echo "Matching DevKit not found in /usr/local/devkit; downloading ${devkitUrl}"
+      mkdir -p "${devkitDir}"
+      wget -q "${devkitUrl}" -O "${devkitArchive}"
+      tar xJf "${devkitArchive}" -C "${devkitDir}"
+      rm -f "${devkitArchive}"
+
+      if ! grep -qx "ADOPTIUM_DEVKIT_RELEASE=${devkitRelease}" "${devkitInfo}" \
+          || ! grep -qx "ADOPTIUM_DEVKIT_TARGET=${devkitTarget}" "${devkitInfo}"; then
+        echo "ERROR: Downloaded DevKit does not match ${devkitRelease} for ${devkitTarget}"
+        exit 1
+      fi
+    fi
+
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-devkit=${devkitDir}"
   fi
 elif [ "$JAVA_FEATURE_VERSION" -ge 19 ] && [ -r /usr/local/gcc11/bin/gcc-11.2 ]; then
   export PATH=/usr/local/gcc11/bin:$PATH
